@@ -1,0 +1,2629 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Elos — Estimulação Cognitiva Adaptativa</title>
+<meta name="description" content="Plataforma de estimulação cognitiva adaptativa para pessoas idosas em lares e unidades de cuidados continuados.">
+<meta name="theme-color" content="#1B4F8C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="./fontes/atkinson-700.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="./fontes/atkinson-400.woff2">
+<link rel="preload" as="font" type="font/woff2" crossorigin href="./fontes/publicsans-400.woff2">
+<link rel="stylesheet" href="./fontes/fontes.css">
+<link rel="icon" type="image/png" sizes="32x32" href="./icones/favicon-32.png">
+<link rel="icon" type="image/svg+xml" href="./icones/icone.svg">
+<link rel="apple-touch-icon" href="./icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Elos">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="application-name" content="Elos">
+<style>
+/* ============================================================
+   ELOS — sistema de design
+   Motivo: azulejo português. Cerâmica fria, cobalto, ocre.
+   Superfícies planas com arestas nítidas (sem sombras difusas):
+   o azulejo não tem sombra, tem vidrado e junta.
+   ============================================================ */
+:root{
+  /* Cerâmica */
+  --porcelana:#F4F7FA;
+  --vidrado:#FFFFFF;
+  --junta:#DDE7F0;
+  --junta-forte:#C3D4E4;
+
+  /* Cobalto (azul de azulejo) */
+  --cobalto:#1B4F8C;
+  --cobalto-fundo:#0E2E52;
+  --cobalto-claro:#4A7FBE;
+  --lavado:#E6EFF8;
+
+  /* Acentos */
+  --ocre:#C88A16;
+  --ocre-lavado:#FBF0D8;
+  --verdete:#1F7A5C;
+  --verdete-lavado:#E2F1EB;
+  --tijolo:#A83232;
+  --tijolo-lavado:#F8E7E7;
+
+  /* Tinta */
+  --tinta:#12202D;
+  --ardosia:#5C6E7E;
+  --ardosia-clara:#8697A5;
+
+  /* Grelha */
+  --r-pro:6px;
+  --r-utente:20px;
+  --u:4px;
+
+  /* Tipografia */
+  --f-titulo:'Bricolage Grotesque','Public Sans',system-ui,sans-serif;
+  --f-ui:'Public Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-utente:'Atkinson Hyperlegible','Public Sans',system-ui,sans-serif;
+
+  /* Escala do utente — controlada nas preferências */
+  --escala-utente:1;
+}
+
+/* Alto contraste (preferência por utente) */
+body.contraste{
+  --porcelana:#FFFFFF; --vidrado:#FFFFFF; --junta:#12202D; --junta-forte:#12202D;
+  --cobalto:#00306B; --lavado:#FFFFFF; --ardosia:#12202D; --ardosia-clara:#12202D;
+  --ocre:#7A5200; --verdete:#004F33; --verdete-lavado:#FFFFFF; --ocre-lavado:#FFFFFF;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; background:var(--porcelana); color:var(--tinta);
+  font-family:var(--f-ui); font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  overscroll-behavior:none;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none;padding:0}
+h1,h2,h3,h4{font-family:var(--f-titulo);font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.15}
+h1{font-size:26px} h2{font-size:20px} h3{font-size:16px}
+a{color:var(--cobalto)}
+:focus-visible{outline:3px solid var(--ocre);outline-offset:2px;border-radius:3px}
+.num{font-variant-numeric:tabular-nums}
+.oculto{display:none !important}
+
+/* ---------- Marca ---------- */
+.marca{display:flex;align-items:center;gap:10px}
+.marca-selo{width:34px;height:34px;flex:0 0 34px}
+.marca-nome{font-family:var(--f-titulo);font-weight:800;font-size:20px;letter-spacing:.04em;color:var(--cobalto-fundo)}
+
+/* ============================================================
+   ECRÃ DE ENTRADA
+   ============================================================ */
+#view-entrada{min-height:100dvh;display:grid;grid-template-rows:auto 1fr auto;
+  background:
+    linear-gradient(0deg,rgba(244,247,250,.94),rgba(244,247,250,.94)),
+    repeating-linear-gradient(0deg,var(--junta-forte) 0 1px,transparent 1px 72px),
+    repeating-linear-gradient(90deg,var(--junta-forte) 0 1px,transparent 1px 72px);
+}
+.entrada-topo{padding:22px 26px}
+.entrada-meio{display:grid;place-items:center;padding:16px 26px}
+.entrada-caixa{width:min(760px,100%);text-align:center}
+.entrada-caixa h1{font-size:clamp(34px,6vw,54px);color:var(--cobalto-fundo)}
+.entrada-caixa p.lead{font-size:17px;color:var(--ardosia);max-width:46ch;margin:14px auto 0}
+.entrada-portas{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:34px}
+.porta{background:var(--vidrado);border:1.5px solid var(--junta);border-radius:var(--r-pro);
+  padding:26px 22px;text-align:left;transition:border-color .15s,transform .15s}
+.porta:hover{border-color:var(--cobalto);transform:translateY(-2px)}
+.porta-etiq{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ocre);font-weight:700}
+.porta h3{font-size:21px;margin:8px 0 6px;color:var(--cobalto-fundo)}
+.porta p{margin:0;font-size:14px;color:var(--ardosia)}
+.entrada-rodape{padding:18px 26px;font-size:12px;color:var(--ardosia-clara);text-align:center}
+
+/* ============================================================
+   ÁREA PROFISSIONAL
+   ============================================================ */
+#view-pro{display:grid;grid-template-columns:236px 1fr;min-height:100dvh}
+.rail{background:var(--cobalto-fundo);color:#fff;padding:20px 14px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100dvh}
+.rail .marca-nome{color:#fff}
+.rail-sep{height:1px;background:rgba(255,255,255,.16);margin:16px 2px}
+.rail-btn{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--r-pro);
+  color:rgba(255,255,255,.72);font-weight:500;font-size:14px;text-align:left;width:100%;transition:background .12s,color .12s}
+.rail-btn:hover{background:rgba(255,255,255,.09);color:#fff}
+.rail-btn[aria-current="true"]{background:var(--cobalto);color:#fff;font-weight:600}
+.rail-btn svg{width:18px;height:18px;flex:0 0 18px}
+.rail-fundo{margin-top:auto;font-size:11px;color:rgba(255,255,255,.42);line-height:1.5}
+
+.tela{padding:26px 30px 60px;max-width:1180px}
+.tela-cab{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:22px}
+.tela-cab .sub{color:var(--ardosia);font-size:14px;margin-top:4px}
+.eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ocre);font-weight:700;margin-bottom:6px}
+
+/* Cartões */
+.cartao{background:var(--vidrado);border:1.5px solid var(--junta);border-radius:var(--r-pro);padding:18px}
+.cartao-cab{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.cartao-cab h3{font-size:14px;letter-spacing:.02em;text-transform:uppercase;color:var(--ardosia);font-weight:700;font-family:var(--f-ui)}
+.grelha{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(165px,1fr))}
+
+/* Métricas */
+.metrica .valor{font-family:var(--f-titulo);font-weight:800;font-size:32px;line-height:1;color:var(--cobalto-fundo);font-variant-numeric:tabular-nums}
+.metrica .rot{font-size:12px;color:var(--ardosia);margin-top:6px;letter-spacing:.02em}
+.metrica .delta{font-size:12px;font-weight:600;margin-top:4px}
+.delta.sobe{color:var(--verdete)} .delta.desce{color:var(--tijolo)} .delta.igual{color:var(--ardosia-clara)}
+
+/* Botões */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 16px;border-radius:var(--r-pro);
+  font-weight:600;font-size:14px;border:1.5px solid transparent;transition:background .12s,border-color .12s,color .12s}
+.btn-primario{background:var(--cobalto);color:#fff}
+.btn-primario:hover{background:var(--cobalto-fundo)}
+.btn-secundario{background:var(--vidrado);border-color:var(--junta-forte);color:var(--cobalto-fundo)}
+.btn-secundario:hover{border-color:var(--cobalto)}
+.btn-fantasma{color:var(--ardosia);padding:8px 10px}
+.btn-fantasma:hover{color:var(--cobalto);background:var(--lavado)}
+.btn-perigo{background:var(--tijolo-lavado);color:var(--tijolo);border-color:#EFCFCF}
+.btn-perigo:hover{background:var(--tijolo);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* Formulários */
+.campo{display:block;margin-bottom:14px}
+.campo > span{display:block;font-size:12px;font-weight:600;color:var(--ardosia);margin-bottom:5px;letter-spacing:.02em}
+.campo input,.campo select,.campo textarea{width:100%;padding:9px 11px;border:1.5px solid var(--junta-forte);
+  border-radius:var(--r-pro);background:var(--vidrado);font-size:14px}
+.campo input:focus,.campo select:focus,.campo textarea:focus{border-color:var(--cobalto);outline:none}
+.campo .dica{font-size:11.5px;color:var(--ardosia-clara);margin-top:4px}
+.linha{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Chips de escolha */
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:7px 13px;border:1.5px solid var(--junta-forte);border-radius:99px;font-size:13px;font-weight:500;color:var(--ardosia);background:var(--vidrado)}
+.chip[aria-pressed="true"]{background:var(--cobalto);border-color:var(--cobalto);color:#fff;font-weight:600}
+
+/* Etiquetas de estado */
+.selo{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:700;letter-spacing:.02em}
+.selo-ok{background:var(--verdete-lavado);color:var(--verdete)}
+.selo-aviso{background:var(--ocre-lavado);color:#8A5E08}
+.selo-alerta{background:var(--tijolo-lavado);color:var(--tijolo)}
+.selo-neutro{background:var(--lavado);color:var(--cobalto)}
+
+/* Lista de utentes */
+.utente-grelha{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.utente-cartao{background:var(--vidrado);border:1.5px solid var(--junta);border-radius:var(--r-pro);padding:16px;text-align:left;transition:border-color .12s,transform .12s;width:100%}
+.utente-cartao:hover{border-color:var(--cobalto);transform:translateY(-2px)}
+.utente-topo{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.avatar{width:44px;height:44px;flex:0 0 44px;border-radius:var(--r-pro);background:var(--lavado);color:var(--cobalto);
+  display:grid;place-items:center;font-family:var(--f-titulo);font-weight:800;font-size:15px;letter-spacing:.02em}
+.utente-nome{font-weight:700;font-size:15px;color:var(--cobalto-fundo);line-height:1.25}
+.utente-meta{font-size:12px;color:var(--ardosia-clara)}
+
+/* Barra de índice */
+.barra{height:7px;background:var(--junta);border-radius:99px;overflow:hidden}
+.barra > i{display:block;height:100%;background:var(--cobalto);border-radius:99px;transition:width .5s cubic-bezier(.2,.8,.2,1)}
+
+/* Tabelas */
+table.tab{width:100%;border-collapse:collapse;font-size:13.5px}
+table.tab th{text-align:left;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ardosia-clara);
+  font-weight:700;padding:8px 10px;border-bottom:1.5px solid var(--junta)}
+table.tab td{padding:10px;border-bottom:1px solid var(--junta)}
+table.tab tr:last-child td{border-bottom:none}
+table.tab tbody tr:hover{background:var(--porcelana)}
+
+/* Linha clicável de lista */
+.lista-btn{display:flex;align-items:flex-start;gap:11px;width:100%;text-align:left;padding:10px 9px;
+  border-radius:var(--r-pro);transition:background .12s}
+.lista-btn:hover{background:var(--porcelana)}
+.lista-btn .selo{flex:0 0 auto;margin-top:2px}
+
+/* Vazio */
+.vazio{text-align:center;padding:52px 20px;border:1.5px dashed var(--junta-forte);border-radius:var(--r-pro);background:var(--vidrado)}
+.vazio h3{color:var(--cobalto-fundo);margin-bottom:6px}
+.vazio p{color:var(--ardosia);font-size:14px;max-width:44ch;margin:0 auto 16px}
+
+/* Abas */
+.abas{display:flex;gap:2px;border-bottom:1.5px solid var(--junta);margin-bottom:20px;overflow-x:auto}
+.aba{padding:9px 15px;font-size:14px;font-weight:600;color:var(--ardosia);border-bottom:2.5px solid transparent;margin-bottom:-1.5px;white-space:nowrap}
+.aba[aria-selected="true"]{color:var(--cobalto);border-bottom-color:var(--cobalto)}
+
+/* ============================================================
+   SIGNATURE — MOSAICO COGNITIVO
+   Painel de 6 azulejos: um por domínio. A densidade do motivo
+   e a intensidade do vidrado codificam a capacidade atual.
+   ============================================================ */
+.mosaico{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;background:var(--junta-forte);
+  border:3px solid var(--junta-forte);border-radius:var(--r-pro);overflow:hidden}
+.azulejo{position:relative;background:var(--vidrado);aspect-ratio:1;display:block;text-align:left}
+.azulejo svg{position:absolute;inset:0;width:100%;height:100%}
+.azulejo .az-rot{position:absolute;left:8px;bottom:6px;font-size:10.5px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--cobalto-fundo);z-index:2;line-height:1.2}
+.azulejo .az-val{position:absolute;right:8px;top:6px;font-family:var(--f-titulo);font-weight:800;font-size:19px;
+  color:var(--cobalto-fundo);z-index:2;font-variant-numeric:tabular-nums}
+.azulejo .az-seta{position:absolute;right:8px;top:30px;font-size:10px;font-weight:700;z-index:2}
+.mosaico-legenda{display:flex;justify-content:space-between;font-size:11px;color:var(--ardosia-clara);margin-top:8px}
+
+/* ============================================================
+   MODO UTENTE — grande, calmo, um passo de cada vez
+   ============================================================ */
+#view-sessao{min-height:100dvh;background:var(--porcelana);font-family:var(--f-utente);
+  font-size:calc(18px * var(--escala-utente));display:flex;flex-direction:column}
+#view-sessao h1,#view-sessao h2,#view-sessao h3{font-family:var(--f-utente);font-weight:700;letter-spacing:-.01em}
+
+.ses-topo{display:flex;align-items:center;gap:16px;padding:14px 22px;background:var(--vidrado);border-bottom:2px solid var(--junta)}
+.ses-quem{font-weight:700;font-size:calc(16px * var(--escala-utente));color:var(--cobalto-fundo)}
+.ses-passos{display:flex;gap:6px;margin-left:auto}
+.ses-passo{width:13px;height:13px;border-radius:3px;background:var(--junta);border:1.5px solid var(--junta-forte)}
+.ses-passo.feito{background:var(--verdete);border-color:var(--verdete)}
+.ses-passo.agora{background:var(--ocre);border-color:var(--ocre)}
+.ses-sair{padding:9px 15px;border:2px solid var(--junta-forte);border-radius:99px;font-weight:700;
+  font-size:calc(14px * var(--escala-utente));color:var(--ardosia);font-family:var(--f-utente)}
+.ses-sair:hover{border-color:var(--cobalto);color:var(--cobalto)}
+
+.ses-palco{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:26px 22px 40px;width:100%;max-width:980px;margin:0 auto;text-align:center}
+.ses-instrucao{font-size:calc(28px * var(--escala-utente));font-weight:700;color:var(--cobalto-fundo);
+  max-width:22ch;line-height:1.25;margin-bottom:10px}
+.ses-ajuda{font-size:calc(17px * var(--escala-utente));color:var(--ardosia);max-width:34ch;margin:0 auto 26px}
+.ses-area{width:100%;display:flex;flex-direction:column;align-items:center;gap:18px}
+
+/* Botão grande do utente */
+.gbtn{font-family:var(--f-utente);font-weight:700;font-size:calc(22px * var(--escala-utente));
+  min-height:calc(76px * var(--escala-utente));padding:16px 26px;border-radius:var(--r-utente);
+  background:var(--vidrado);border:3px solid var(--junta-forte);color:var(--cobalto-fundo);
+  transition:border-color .12s,background .12s,transform .08s;line-height:1.25}
+.gbtn:hover{border-color:var(--cobalto);background:var(--lavado)}
+.gbtn:active{transform:scale(.98)}
+.gbtn.certo{border-color:var(--verdete);background:var(--verdete-lavado);color:var(--verdete)}
+.gbtn.errado{border-color:var(--tijolo);background:var(--tijolo-lavado);color:var(--tijolo)}
+.gbtn.escolhido{border-color:var(--cobalto);background:var(--lavado)}
+.gbtn.gbtn-principal{background:var(--cobalto);border-color:var(--cobalto);color:#fff;min-width:260px}
+.gbtn.gbtn-principal:hover{background:var(--cobalto-fundo);border-color:var(--cobalto-fundo)}
+.gbtn:disabled{opacity:.5}
+.opcoes{display:grid;gap:14px;width:100%;max-width:760px}
+.op2{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.op3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+
+/* Grelha de azulejos do jogo da memória */
+.tabuleiro{display:grid;gap:10px;width:100%;max-width:min(92vw,640px);margin:0 auto}
+.carta{aspect-ratio:1;border-radius:12px;border:3px solid var(--junta-forte);background:var(--vidrado);
+  display:grid;place-items:center;font-size:clamp(26px,7vw,46px);transition:transform .2s,border-color .15s;
+  transform-style:preserve-3d}
+.carta.tapada{background:var(--cobalto);border-color:var(--cobalto-fundo);color:transparent}
+.carta.tapada::after{content:'';position:absolute;width:52%;height:52%;border:2px solid rgba(255,255,255,.5);transform:rotate(45deg)}
+.carta{position:relative;overflow:hidden}
+.carta.par{border-color:var(--verdete);background:var(--verdete-lavado)}
+.carta:disabled{cursor:default}
+
+/* Grelha de atenção */
+.grelha-atencao{display:grid;gap:8px;width:100%;max-width:min(92vw,660px);margin:0 auto}
+.simbolo{aspect-ratio:1;border-radius:10px;border:2.5px solid var(--junta);background:var(--vidrado);
+  display:grid;place-items:center;font-size:clamp(20px,5vw,34px);font-weight:700;color:var(--cobalto-fundo)}
+.simbolo.marcado{border-color:var(--verdete);background:var(--verdete-lavado)}
+.simbolo.falso{border-color:var(--tijolo);background:var(--tijolo-lavado)}
+
+/* Painel de sequência */
+.seq-painel{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:min(88vw,420px)}
+.seq-tecla{aspect-ratio:1.25;border-radius:16px;border:4px solid rgba(0,0,0,.12);
+  display:grid;place-items:center;font-size:clamp(30px,8vw,52px);transition:filter .1s,transform .1s}
+.seq-tecla.acesa{filter:brightness(1.45) saturate(1.3);transform:scale(1.04)}
+
+/* Palavras (lista de compras) */
+.palavras{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;max-width:760px}
+.palavra{font-family:var(--f-utente);font-weight:700;font-size:calc(21px * var(--escala-utente));
+  padding:14px 22px;border-radius:99px;border:3px solid var(--junta-forte);background:var(--vidrado);color:var(--cobalto-fundo)}
+.palavra.escolhida{border-color:var(--cobalto);background:var(--cobalto);color:#fff}
+.palavra.certa{border-color:var(--verdete);background:var(--verdete-lavado);color:var(--verdete)}
+.palavra.falhada{border-color:var(--tijolo);background:var(--tijolo-lavado);color:var(--tijolo)}
+.mostrar-lista{display:flex;flex-wrap:wrap;gap:14px;justify-content:center}
+.mostrar-lista span{font-size:calc(30px * var(--escala-utente));font-weight:700;color:var(--cobalto-fundo);
+  padding:10px 20px;background:var(--vidrado);border:3px solid var(--cobalto);border-radius:14px}
+
+/* Sinal (go/no-go) */
+.sinal-palco{width:min(80vw,400px);aspect-ratio:1;border-radius:24px;border:4px solid var(--junta-forte);
+  background:var(--vidrado);display:grid;place-items:center;font-size:clamp(70px,20vw,150px)}
+.sinal-palco.ativo{border-color:var(--cobalto)}
+
+/* Retorno ao utente */
+.retorno{font-size:calc(24px * var(--escala-utente));font-weight:700;min-height:2.2em;display:flex;
+  align-items:center;justify-content:center;gap:10px}
+.retorno.bom{color:var(--verdete)} .retorno.mau{color:var(--cobalto)}
+
+/* Cronómetro suave */
+.tempo-barra{width:min(90vw,560px);height:10px;background:var(--junta);border-radius:99px;overflow:hidden}
+.tempo-barra > i{display:block;height:100%;background:var(--ocre);width:100%}
+
+/* Resumo final da sessão */
+.resumo{width:min(92vw,780px);text-align:left}
+.resumo-linha{display:flex;align-items:center;gap:14px;padding:16px;background:var(--vidrado);
+  border:2px solid var(--junta);border-radius:14px;margin-bottom:10px}
+.resumo-linha .ic{font-size:32px;flex:0 0 auto}
+.resumo-linha .txt{flex:1}
+.resumo-linha .txt b{display:block;font-size:calc(19px * var(--escala-utente));color:var(--cobalto-fundo)}
+.resumo-linha .txt small{font-size:calc(15px * var(--escala-utente));color:var(--ardosia)}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+.modal-fundo{position:fixed;inset:0;background:rgba(14,46,82,.5);display:grid;place-items:center;
+  padding:20px;z-index:100;backdrop-filter:blur(2px)}
+.modal{background:var(--vidrado);border-radius:var(--r-pro);width:min(560px,100%);max-height:88dvh;
+  overflow:auto;border:1.5px solid var(--junta-forte)}
+.modal-cab{padding:18px 22px;border-bottom:1.5px solid var(--junta);display:flex;justify-content:space-between;align-items:center;gap:12px}
+.modal-corpo{padding:22px}
+.modal-pe{padding:16px 22px;border-top:1.5px solid var(--junta);display:flex;justify-content:flex-end;gap:9px;background:var(--porcelana)}
+
+/* Teclado numérico do PIN */
+.pin-mostra{display:flex;gap:12px;justify-content:center;margin-bottom:22px}
+.pin-ponto{width:15px;height:15px;border-radius:50%;border:2.5px solid var(--junta-forte)}
+.pin-ponto.cheio{background:var(--cobalto);border-color:var(--cobalto)}
+.pin-teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:280px;margin:0 auto}
+.pin-tecla{padding:16px;border:1.5px solid var(--junta-forte);border-radius:var(--r-pro);font-size:20px;
+  font-weight:600;background:var(--vidrado);font-variant-numeric:tabular-nums}
+.pin-tecla:hover{border-color:var(--cobalto);background:var(--lavado)}
+
+/* Aviso / rodapé clínico */
+.nota-clinica{font-size:12px;color:var(--ardosia);background:var(--lavado);border-left:3px solid var(--cobalto-claro);
+  padding:11px 14px;border-radius:0 var(--r-pro) var(--r-pro) 0;line-height:1.5}
+
+/* Torrada */
+#torradas{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center}
+.torrada{background:var(--cobalto-fundo);color:#fff;padding:11px 20px;border-radius:99px;font-size:13.5px;font-weight:600;
+  animation:sobe .25s cubic-bezier(.2,.9,.3,1)}
+@keyframes sobe{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pisca{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ============================================================
+   RESPONSIVO
+   ============================================================ */
+@media (max-width:860px){
+  #view-pro{grid-template-columns:1fr}
+  .rail{position:static;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;padding:12px 14px;gap:4px}
+  .rail .marca{width:100%;margin-bottom:6px}
+  .rail-sep,.rail-fundo{display:none}
+  .rail-btn{width:auto;padding:8px 11px;font-size:13px}
+  .tela{padding:20px 16px 60px}
+  .linha{grid-template-columns:1fr}
+  .ses-palco{padding:20px 14px 32px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+}
+
+/* ============================================================
+   IMPRESSÃO — relatório clínico A4
+   ============================================================ */
+@media print{
+  .rail,.tela-cab .btn,.btn,.abas,#torradas,.nao-imprime{display:none !important}
+  #view-pro{grid-template-columns:1fr}
+  body{background:#fff;font-size:11.5px}
+  .cartao{border:1px solid #ccc;break-inside:avoid;page-break-inside:avoid}
+  .tela{padding:0;max-width:none}
+  .imprime-so{display:block !important}
+  @page{margin:16mm}
+}
+.imprime-so{display:none}
+</style>
+</head>
+<body>
+<div id="torradas"></div>
+
+<!-- ===================== ENTRADA ===================== -->
+<div id="view-entrada">
+  <div class="entrada-topo">
+    <div class="marca">
+      <svg class="marca-selo" viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="7" fill="#1B4F8C"/>
+        <path d="M20 5 35 20 20 35 5 20Z" fill="none" stroke="#fff" stroke-width="2"/>
+        <path d="M20 12 28 20 20 28 12 20Z" fill="none" stroke="#fff" stroke-width="1.4" opacity=".6"/>
+        <circle cx="20" cy="20" r="4.2" fill="#C88A16"/>
+      </svg>
+      <span class="marca-nome">ELOS</span>
+    </div>
+  </div>
+
+  <div class="entrada-meio">
+    <div class="entrada-caixa">
+      <div class="eyebrow">Estimulação cognitiva adaptativa</div>
+      <h1>Cada pessoa tem o seu ritmo.<br>O exercício ajusta-se a ele.</h1>
+      <p class="lead">Elos monta sessões de estimulação cognitiva que se calibram, exercício a exercício, à capacidade real de cada utente — e regista a evolução para a equipa acompanhar.</p>
+
+      <div class="entrada-portas">
+        <button class="porta" id="porta-sessao">
+          <div class="porta-etiq">Para quem dinamiza</div>
+          <h3>Começar uma sessão</h3>
+          <p>Escolher o utente e iniciar os exercícios do dia. Ecrã grande, sem pressa.</p>
+        </button>
+        <button class="porta" id="porta-pro">
+          <div class="porta-etiq">Para a equipa</div>
+          <h3>Área profissional</h3>
+          <p>Utentes, evolução por domínio, relatórios e definições. Protegida por PIN.</p>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="entrada-rodape">
+    <button class="btn btn-secundario oculto" id="btn-instalar" style="margin-bottom:14px">Instalar neste dispositivo</button>
+    <div>Os dados ficam guardados apenas neste dispositivo. Elos é uma ferramenta de estimulação e registo — não substitui avaliação clínica.</div>
+    <div id="estado-offline" style="margin-top:6px"></div>
+  </div>
+</div>
+
+<!-- ===================== ÁREA PROFISSIONAL ===================== -->
+<div id="view-pro" class="oculto">
+  <nav class="rail nao-imprime" aria-label="Navegação principal">
+    <div class="marca">
+      <svg class="marca-selo" viewBox="0 0 40 40" aria-hidden="true">
+        <rect width="40" height="40" rx="7" fill="#4A7FBE"/>
+        <path d="M20 5 35 20 20 35 5 20Z" fill="none" stroke="#fff" stroke-width="2"/>
+        <circle cx="20" cy="20" r="4.2" fill="#C88A16"/>
+      </svg>
+      <span class="marca-nome">ELOS</span>
+    </div>
+    <div class="rail-sep"></div>
+    <button class="rail-btn" data-pane="painel">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Painel
+    </button>
+    <button class="rail-btn" data-pane="utentes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>
+      Utentes
+    </button>
+    <button class="rail-btn" data-pane="exercicios">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+      Exercícios
+    </button>
+    <button class="rail-btn" data-pane="definicoes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Definições
+    </button>
+    <div class="rail-sep"></div>
+    <button class="rail-btn" id="pro-iniciar-sessao">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Iniciar sessão
+    </button>
+    <button class="rail-btn" id="pro-sair">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </button>
+    <div class="rail-fundo">
+      <span id="rail-instituicao"></span><br>
+      Elos v1.0 · dados locais
+    </div>
+  </nav>
+  <main class="tela" id="pro-tela" tabindex="-1"></main>
+</div>
+
+<!-- ===================== SESSÃO (MODO UTENTE) ===================== -->
+<div id="view-sessao" class="oculto">
+  <header class="ses-topo">
+    <div class="ses-quem" id="ses-quem"></div>
+    <div class="ses-passos" id="ses-passos" aria-label="Progresso da sessão"></div>
+    <button class="ses-sair" id="ses-sair">Terminar</button>
+  </header>
+  <main class="ses-palco" id="ses-palco" tabindex="-1"></main>
+</div>
+
+<div id="modais"></div>
+<script>
+/* =============================================================
+   ELOS — núcleo
+   Armazenamento, modelo de dados, motor adaptativo e gráficos.
+   ============================================================= */
+'use strict';
+
+/* ---------------- utilitários ---------------- */
+const $  = (s, r) => (r || document).querySelector(s);
+const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const rnd   = (a, b) => a + Math.random() * (b - a);
+const rndI  = (a, b) => Math.floor(rnd(a, b + 1));
+const pick  = a => a[Math.floor(Math.random() * a.length)];
+const uid   = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const esc   = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+/* Sinal de aborto: permite terminar uma sessão a meio de um exercício
+   que esteja à espera de um toque ou de um temporizador. */
+const ABORTO = Symbol('aborto');
+const abortar = () => window.dispatchEvent(new Event('elos:abortar'));
+const espera = ms => new Promise((res, rej) => {
+  const limpar = () => { clearTimeout(t); window.removeEventListener('elos:abortar', onA); };
+  const t = setTimeout(() => { limpar(); res(); }, ms);
+  const onA = () => { limpar(); rej(ABORTO); };
+  window.addEventListener('elos:abortar', onA, { once:true });
+});
+
+function baralhar(a){ a = a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function amostra(a, n){ return baralhar(a).slice(0, n); }
+
+const DIAS  = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+const MESES = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+const dataCurta = d => { d = new Date(d); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };
+const dataLonga = d => { d = new Date(d); return `${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`; };
+const horaCurta = d => { d = new Date(d); return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; };
+const euros = v => v.toFixed(2).replace('.', ',') + ' €';
+
+function torrada(txt, ms){
+  const t = document.createElement('div');
+  t.className = 'torrada'; t.textContent = txt;
+  $('#torradas').appendChild(t);
+  setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 320); }, ms || 2600);
+}
+
+/* ---------------- armazenamento ----------------
+   Funciona em três contextos, por ordem de preferência:
+   1. window.storage (pré-visualização em artefacto)
+   2. localStorage   (site publicado / uso real no lar)
+   3. memória        (modo privado sem permissões)
+------------------------------------------------- */
+const Guardar = (() => {
+  const CHAVE = 'elos:estado';
+  let memoria = null;
+  const temWindowStorage = typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function';
+
+  return {
+    modo: temWindowStorage ? 'sessão' : (typeof localStorage !== 'undefined' ? 'dispositivo' : 'memória'),
+    async ler(){
+      try{
+        if(temWindowStorage){
+          const r = await window.storage.get(CHAVE);
+          return r && r.value ? JSON.parse(r.value) : null;
+        }
+        const r = localStorage.getItem(CHAVE);
+        return r ? JSON.parse(r) : null;
+      }catch(e){ return memoria; }
+    },
+    async escrever(obj){
+      const txt = JSON.stringify(obj);
+      memoria = obj;
+      try{
+        if(temWindowStorage){ await window.storage.set(CHAVE, txt); return true; }
+        localStorage.setItem(CHAVE, txt); return true;
+      }catch(e){ console.warn('Guardado apenas em memória:', e); return false; }
+    }
+  };
+})();
+
+/* ---------------- domínios cognitivos ----------------
+   Seis domínios, alinhados com as áreas avaliadas em rastreios
+   cognitivos correntes (tipo MoCA/MMSE). Seis é também o que
+   preenche um painel de azulejo 3x2 — o mosaico do utente.
+-------------------------------------------------------- */
+const DOMINIOS = {
+  memoria:    { nome:'Memória',            curto:'Memória',    desc:'Reter e recuperar informação recente.' },
+  atencao:    { nome:'Atenção',            curto:'Atenção',    desc:'Focar, filtrar distrações e manter o esforço.' },
+  linguagem:  { nome:'Linguagem',          curto:'Linguagem',  desc:'Compreender, nomear e completar expressões.' },
+  executivas: { nome:'Funções executivas', curto:'Executivas', desc:'Categorizar, planear e alternar entre regras.' },
+  calculo:    { nome:'Cálculo',            curto:'Cálculo',    desc:'Operar com números em situações do dia a dia.' },
+  orientacao: { nome:'Orientação',         curto:'Orientação', desc:'Situar-se no tempo, no espaço e na rotina.' }
+};
+const CHAVES_DOM = Object.keys(DOMINIOS);
+
+const NIVEIS = {
+  ligeiro:   { nome:'Sem défice aparente',   theta:66, desc:'Autónomo na maioria das tarefas.' },
+  moderado:  { nome:'Défice ligeiro',        theta:46, desc:'Esquecimentos frequentes, mantém rotina.' },
+  avancado:  { nome:'Défice moderado',       theta:28, desc:'Precisa de apoio e de instruções simples.' },
+  intenso:   { nome:'Défice acentuado',      theta:15, desc:'Apoio permanente; sessões curtas.' }
+};
+
+const MODOS_DESAFIO = {
+  conforto:   { nome:'Conforto',   acerto:.85, desc:'Prioriza o sucesso. Para quem se frustra depressa.' },
+  equilibrio: { nome:'Equilíbrio', acerto:.78, desc:'Recomendado. Desafia sem desanimar.' },
+  desafio:    { nome:'Desafio',    acerto:.66, desc:'Para utentes preservados que pedem mais.' }
+};
+
+/* ---------------- motor adaptativo ----------------
+   Modelo logístico de um parâmetro (família Rasch/Elo).
+   theta = capacidade do utente no domínio (1–99)
+   d     = dificuldade do item (1–99)
+   Escolhe-se d de modo a que a probabilidade prevista de acerto
+   iguale o alvo do modo de desafio — a zona onde se aprende sem
+   desistir. Depois de cada item, theta é revisto pelo desvio
+   entre o resultado e a previsão.
+----------------------------------------------------- */
+const Motor = {
+  esperado(theta, d){ return 1 / (1 + Math.pow(10, (d - theta) / 25)); },
+  /* passo de revisão: grande no início (pouca informação), estabiliza com a prática */
+  passo(n){ return 8 + 14 * Math.exp(-n / 8); },
+  rever(theta, d, acertou, n){
+    return clamp(theta + this.passo(n) * ((acertou ? 1 : 0) - this.esperado(theta, d)), 1, 99);
+  },
+  /* dificuldade que produz a taxa de acerto alvo */
+  alvo(theta, modo){
+    const p = (MODOS_DESAFIO[modo] || MODOS_DESAFIO.equilibrio).acerto;
+    return clamp(theta - 25 * Math.log10(p / (1 - p)), 1, 99);
+  },
+  /* margem de confiança grosseira: encolhe com o número de observações */
+  incerteza(n){ return Math.round(clamp(22 * Math.exp(-n / 12) + 3, 3, 25)); }
+};
+
+/* ---------------- estado ---------------- */
+let S = null;
+
+function estadoInicial(){
+  return {
+    versao: 1,
+    instituicao: '',
+    pin: '1234',
+    desafio: 'equilibrio',
+    jogosPorSessao: 4,
+    itensPorJogo: 6,
+    dinamizador: '',
+    utentes: [],
+    sessoes: [],
+    criadoEm: new Date().toISOString()
+  };
+}
+
+function perfilInicial(theta){
+  const p = {};
+  CHAVES_DOM.forEach(k => p[k] = { t: theta, n: 0 });
+  return p;
+}
+
+function novoUtente(dados){
+  return Object.assign({
+    id: uid(),
+    nome: '',
+    iniciais: '',
+    anoNascimento: null,
+    quarto: '',
+    nivel: 'moderado',
+    interesses: [],
+    notas: '',
+    ativo: true,
+    desafio: null,
+    criadoEm: new Date().toISOString(),
+    perfil: perfilInicial(NIVEIS[dados && dados.nivel ? dados.nivel : 'moderado'].theta),
+    prefs: { escala: 1.15, contraste: false, som: true, semTempo: false },
+    ultimosJogos: []
+  }, dados || {});
+}
+
+async function gravar(){ await Guardar.escrever(S); }
+
+async function carregar(){
+  const g = await Guardar.ler();
+  S = g && g.versao ? g : estadoInicial();
+  // migração defensiva
+  S.utentes.forEach(u => {
+    if(!u.perfil) u.perfil = perfilInicial(46);
+    CHAVES_DOM.forEach(k => { if(!u.perfil[k]) u.perfil[k] = { t:46, n:0 }; });
+    if(!u.prefs) u.prefs = { escala:1.15, contraste:false, som:true, semTempo:false };
+    if(!u.ultimosJogos) u.ultimosJogos = [];
+  });
+}
+
+/* ---------------- consultas ---------------- */
+const utentePorId = id => S.utentes.find(u => u.id === id);
+const sessoesDe   = id => S.sessoes.filter(s => s.utenteId === id).sort((a,b) => new Date(a.inicio) - new Date(b.inicio));
+
+function indiceGlobal(u){
+  const vals = CHAVES_DOM.map(k => u.perfil[k].t);
+  return Math.round(vals.reduce((a,b) => a+b, 0) / vals.length);
+}
+function observacoes(u){ return CHAVES_DOM.reduce((a,k) => a + u.perfil[k].n, 0); }
+
+function modoDesafioDe(u){ return u.desafio || S.desafio; }
+
+/* série do índice global ao longo do tempo, reconstruída das sessões */
+function serieIndice(u){
+  const ss = sessoesDe(u.id);
+  const perfil = {}; CHAVES_DOM.forEach(k => perfil[k] = NIVEIS[u.nivel || 'moderado'].theta);
+  const pontos = [];
+  ss.forEach(s => {
+    (s.blocos || []).forEach(b => { if(perfil[b.dominio] !== undefined) perfil[b.dominio] = b.tDepois; });
+    const media = CHAVES_DOM.reduce((a,k) => a + perfil[k], 0) / CHAVES_DOM.length;
+    pontos.push({ x: new Date(s.inicio).getTime(), y: media, sessao: s });
+  });
+  return pontos;
+}
+
+function estatisticasUtente(u){
+  const ss = sessoesDe(u.id);
+  let itens = 0, certos = 0, tempoTotal = 0, msSoma = 0, msN = 0;
+  ss.forEach(s => {
+    tempoTotal += (new Date(s.fim || s.inicio) - new Date(s.inicio));
+    (s.blocos || []).forEach(b => (b.itens || []).forEach(i => {
+      itens++; if(i.ok) certos++;
+      if(i.ms){ msSoma += i.ms; msN++; }
+    }));
+  });
+  const serie = serieIndice(u);
+  let tendencia = null;
+  if(serie.length >= 3){
+    const n = Math.min(4, serie.length);
+    const recente = serie.slice(-n).reduce((a,p) => a + p.y, 0) / n;
+    const antes = serie.slice(0, Math.max(1, serie.length - n)).reduce((a,p) => a + p.y, 0) / Math.max(1, serie.length - n);
+    tendencia = recente - antes;
+  }
+  return {
+    sessoes: ss.length,
+    itens, certos,
+    acerto: itens ? certos / itens : null,
+    minutos: Math.round(tempoTotal / 60000),
+    tempoMedio: msN ? Math.round(msSoma / msN / 100) / 10 : null,
+    ultima: ss.length ? ss[ss.length - 1].inicio : null,
+    tendencia,
+    diasSemSessao: ss.length ? Math.floor((Date.now() - new Date(ss[ss.length-1].inicio)) / 86400000) : null
+  };
+}
+
+/* sinalização para a equipa — indicadores, não diagnóstico */
+function sinais(u){
+  const e = estatisticasUtente(u), out = [];
+  if(e.sessoes === 0) out.push({ tipo:'neutro', txt:'Ainda sem sessões registadas' });
+  if(e.diasSemSessao !== null && e.diasSemSessao >= 14) out.push({ tipo:'aviso', txt:`Sem sessão há ${e.diasSemSessao} dias` });
+  if(e.tendencia !== null && e.tendencia <= -6) out.push({ tipo:'alerta', txt:`Descida de ${Math.abs(Math.round(e.tendencia))} pontos no índice — vale a pena falar com a equipa clínica` });
+  if(e.tendencia !== null && e.tendencia >= 5) out.push({ tipo:'ok', txt:`Subida de ${Math.round(e.tendencia)} pontos no índice` });
+  if(e.acerto !== null && e.acerto < .45 && e.itens > 20) out.push({ tipo:'aviso', txt:'Taxa de acerto baixa — considerar o modo Conforto' });
+  const abandonos = sessoesDe(u.id).filter(s => s.interrompida).length;
+  if(abandonos >= 2) out.push({ tipo:'aviso', txt:`${abandonos} sessões interrompidas — rever duração ou horário` });
+  return out;
+}
+
+/* ---------------- planeador de sessão ----------------
+   Ordem deliberada: abre no domínio mais forte (entra-se pela
+   confiança), trabalha os mais fracos no meio, e fecha num
+   domínio intermédio para a sessão acabar bem.
+------------------------------------------------------- */
+function planoSessao(u, nJogos){
+  nJogos = nJogos || S.jogosPorSessao;
+  const ord = CHAVES_DOM.slice().sort((a,b) => u.perfil[a].t - u.perfil[b].t); // fraco → forte
+  const seq = [];
+  const forte = ord[ord.length - 1];
+  seq.push({ dominio: forte, papel: 'Aquecimento', porque: 'Começar pelo domínio mais preservado, para entrar com confiança.' });
+  const fracos = ord.filter(d => d !== forte);
+  for(let i = 0; i < nJogos - 2 && i < fracos.length; i++){
+    seq.push({ dominio: fracos[i], papel: 'Treino', porque: `${DOMINIOS[fracos[i]].nome} é dos domínios com maior margem de progresso.` });
+  }
+  if(nJogos >= 2){
+    const meio = ord[Math.floor(ord.length / 2)];
+    seq.push({ dominio: meio, papel: 'Encerramento', porque: 'Fechar num domínio intermédio, para terminar com sucesso.' });
+  }
+  return seq.slice(0, nJogos).map(p => {
+    const cands = JOGOS.filter(j => j.dominio === p.dominio);
+    const recentes = u.ultimosJogos || [];
+    const ordC = cands.slice().sort((a,b) => recentes.lastIndexOf(a.id) - recentes.lastIndexOf(b.id));
+    return Object.assign({}, p, { jogo: ordC[0] || pick(JOGOS) });
+  });
+}
+
+/* ---------------- gráficos (SVG, sem dependências) ---------------- */
+
+/* Mosaico cognitivo — o painel de azulejo do utente.
+   Cada azulejo é um domínio. Mais camadas de motivo e vidrado
+   mais carregado = capacidade mais alta. */
+function motivoAzulejo(dominio, camadas){
+  const p = [];
+  const cx = 50, cy = 50;
+  if(dominio === 'memoria'){
+    for(let i = 1; i <= camadas; i++){ const r = 8 + i * 8; p.push(`<path d="M${cx} ${cy-r} L${cx+r} ${cy} L${cx} ${cy+r} L${cx-r} ${cy}Z"/>`); }
+  } else if(dominio === 'atencao'){
+    const n = 4 + camadas * 4;
+    for(let i = 0; i < n; i++){ const a = (i / n) * Math.PI * 2; p.push(`<line x1="${cx}" y1="${cy}" x2="${(cx + Math.cos(a)*42).toFixed(1)}" y2="${(cy + Math.sin(a)*42).toFixed(1)}"/>`); }
+    p.push(`<circle cx="${cx}" cy="${cy}" r="${5 + camadas*2}"/>`);
+  } else if(dominio === 'linguagem'){
+    for(let i = 1; i <= camadas; i++){ const r = i * 11;
+      p.push(`<path d="M${cx-r} ${cy} A${r} ${r} 0 0 1 ${cx+r} ${cy}"/>`);
+      p.push(`<path d="M${cx-r} ${cy} A${r} ${r} 0 0 0 ${cx+r} ${cy}"/>`); }
+  } else if(dominio === 'executivas'){
+    const n = camadas + 1, passo = 88 / n;
+    for(let i = 0; i < n; i++) for(let j = 0; j < n; j++){
+      const x = 6 + i * passo + passo/2, y = 6 + j * passo + passo/2, s = passo * .34;
+      p.push(`<path d="M${x} ${y-s} L${x+s} ${y} L${x} ${y+s} L${x-s} ${y}Z"/>`);
+    }
+  } else if(dominio === 'calculo'){
+    for(let i = 1; i <= camadas; i++){ const r = i * 17;
+      p.push(`<path d="M6 ${6+r} A${r} ${r} 0 0 1 ${6+r} 6"/>`);
+      p.push(`<path d="M94 ${94-r} A${r} ${r} 0 0 1 ${94-r} 94"/>`); }
+  } else {
+    const n = 4 + (camadas - 1) * 2;
+    for(let i = 0; i < n; i++){ const a = (i/n)*Math.PI*2, b = a + Math.PI/n;
+      p.push(`<path d="M${cx} ${cy} L${(cx+Math.cos(a)*40).toFixed(1)} ${(cy+Math.sin(a)*40).toFixed(1)} L${(cx+Math.cos(b)*16).toFixed(1)} ${(cy+Math.sin(b)*16).toFixed(1)}Z"/>`); }
+  }
+  return p.join('');
+}
+
+function mosaicoHTML(u, opcoes){
+  opcoes = opcoes || {};
+  const tiles = CHAVES_DOM.map(k => {
+    const t = u.perfil[k].t, n = u.perfil[k].n;
+    const camadas = clamp(Math.round(1 + (t / 100) * 4), 1, 5);
+    const fundo = (0.05 + (t / 100) * 0.24).toFixed(3);
+    const traco = (0.22 + (t / 100) * 0.62).toFixed(3);
+    const seta = n === 0 ? '' : '';
+    const tag = opcoes.clicavel ? 'button' : 'div';
+    return `<${tag} class="azulejo" ${opcoes.clicavel ? `data-dom="${k}"` : ''} title="${esc(DOMINIOS[k].nome)}: ${Math.round(t)}/100 · ${n} exercícios">
+      <svg viewBox="0 0 100 100" aria-hidden="true">
+        <rect x="0" y="0" width="100" height="100" fill="var(--cobalto)" opacity="${fundo}"/>
+        <rect x="4" y="4" width="92" height="92" fill="none" stroke="var(--cobalto)" stroke-width="1" opacity="${(+traco*0.6).toFixed(3)}"/>
+        <g fill="none" stroke="var(--cobalto)" stroke-width="1.6" opacity="${traco}" stroke-linejoin="round">${motivoAzulejo(k, camadas)}</g>
+      </svg>
+      <span class="az-val">${n === 0 ? '—' : Math.round(t)}</span>
+      <span class="az-rot">${esc(DOMINIOS[k].curto)}</span>
+    </${tag}>`;
+  }).join('');
+  return `<div class="mosaico">${tiles}</div>
+    <div class="mosaico-legenda"><span>Motivo mais denso = capacidade estimada mais alta</span><span>0 – 100</span></div>`;
+}
+
+function sparkline(pontos, w, h){
+  w = w || 120; h = h || 30;
+  if(pontos.length < 2) return `<svg width="${w}" height="${h}"></svg>`;
+  const ys = pontos.map(p => p.y), min = Math.min(...ys) - 2, max = Math.max(...ys) + 2;
+  const d = pontos.map((p, i) => `${i === 0 ? 'M' : 'L'}${(i / (pontos.length-1) * (w-2) + 1).toFixed(1)} ${(h - 2 - ((p.y - min)/(max - min || 1)) * (h - 4)).toFixed(1)}`).join(' ');
+  const sobe = ys[ys.length-1] >= ys[0];
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><path d="${d}" fill="none" stroke="${sobe ? 'var(--verdete)' : 'var(--ocre)'}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function grafLinha(pontos, opts){
+  opts = opts || {};
+  const w = 660, h = 220, ml = 34, mr = 12, mt = 12, mb = 26;
+  if(pontos.length < 2){
+    return `<div style="height:${h}px;display:grid;place-items:center;color:var(--ardosia-clara);font-size:13px;border:1.5px dashed var(--junta-forte);border-radius:6px">Faltam sessões para desenhar a evolução (mínimo 2)</div>`;
+  }
+  const xs = pontos.map(p => p.x), ys = pontos.map(p => p.y);
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const y0 = Math.max(0, Math.min(...ys) - 8), y1 = Math.min(100, Math.max(...ys) + 8);
+  const px = v => ml + ((v - x0) / (x1 - x0 || 1)) * (w - ml - mr);
+  const py = v => mt + (1 - (v - y0) / (y1 - y0 || 1)) * (h - mt - mb);
+  const linhas = [], eixo = [];
+  const passos = 4;
+  for(let i = 0; i <= passos; i++){
+    const v = y0 + (y1 - y0) * i / passos, y = py(v);
+    linhas.push(`<line x1="${ml}" y1="${y.toFixed(1)}" x2="${w-mr}" y2="${y.toFixed(1)}" stroke="var(--junta)" stroke-width="1"/>`);
+    eixo.push(`<text x="${ml-6}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ardosia-clara)">${Math.round(v)}</text>`);
+  }
+  const d = pontos.map((p,i) => `${i===0?'M':'L'}${px(p.x).toFixed(1)} ${py(p.y).toFixed(1)}`).join(' ');
+  const area = d + ` L${px(pontos[pontos.length-1].x).toFixed(1)} ${py(y0).toFixed(1)} L${px(pontos[0].x).toFixed(1)} ${py(y0).toFixed(1)}Z`;
+  const bolas = pontos.map(p => `<circle cx="${px(p.x).toFixed(1)}" cy="${py(p.y).toFixed(1)}" r="3.4" fill="var(--vidrado)" stroke="var(--cobalto)" stroke-width="2"><title>${dataCurta(p.x)} — índice ${Math.round(p.y)}</title></circle>`).join('');
+  const rot = [pontos[0], pontos[pontos.length-1]].map((p,i) => `<text x="${px(p.x).toFixed(1)}" y="${h-8}" text-anchor="${i===0?'start':'end'}" font-size="10" fill="var(--ardosia-clara)">${dataCurta(p.x)}</text>`).join('');
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto" role="img" aria-label="Evolução do índice cognitivo">
+    ${linhas.join('')}
+    <path d="${area}" fill="var(--cobalto)" opacity=".07"/>
+    <path d="${d}" fill="none" stroke="var(--cobalto)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${bolas}${eixo.join('')}${rot}
+  </svg>`;
+}
+
+function barrasDominio(u){
+  return CHAVES_DOM.map(k => {
+    const t = u.perfil[k].t, n = u.perfil[k].n;
+    const inc = Motor.incerteza(n);
+    return `<div style="margin-bottom:13px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+        <span style="font-weight:600;color:var(--cobalto-fundo)">${esc(DOMINIOS[k].nome)}</span>
+        <span class="num" style="color:var(--ardosia)">${n === 0 ? 'sem dados' : `${Math.round(t)} ± ${inc}`}</span>
+      </div>
+      <div class="barra"><i style="width:${n===0?0:t}%"></i></div>
+      <div style="font-size:11.5px;color:var(--ardosia-clara);margin-top:3px">${n} exercícios registados · ${esc(DOMINIOS[k].desc)}</div>
+    </div>`;
+  }).join('');
+}
+
+/* ---------------- modais ---------------- */
+function abrirModal(titulo, corpoHTML, botoes){
+  return new Promise(resolve => {
+    const fundo = document.createElement('div');
+    fundo.className = 'modal-fundo';
+    fundo.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-label="${esc(titulo)}">
+      <div class="modal-cab"><h2>${esc(titulo)}</h2><button class="btn btn-fantasma" data-fechar aria-label="Fechar">✕</button></div>
+      <div class="modal-corpo">${corpoHTML}</div>
+      <div class="modal-pe">${(botoes||[{r:'ok',t:'Fechar',c:'btn-secundario'}]).map(b => `<button class="btn ${b.c||'btn-secundario'}" data-r="${b.r}">${esc(b.t)}</button>`).join('')}</div>
+    </div>`;
+    const fim = v => { fundo.remove(); resolve(v); };
+    fundo.addEventListener('click', e => {
+      if(e.target === fundo || e.target.closest('[data-fechar]')) return fim(null);
+      const b = e.target.closest('[data-r]');
+      if(b) fim({ r: b.dataset.r, modal: fundo });
+    });
+    $('#modais').appendChild(fundo);
+    const f = fundo.querySelector('input,select,textarea,button');
+    if(f) f.focus();
+  });
+}
+async function confirmar(titulo, texto, rotulo, perigoso){
+  const r = await abrirModal(titulo, `<p style="margin:0;color:var(--ardosia)">${esc(texto)}</p>`, [
+    { r:'nao', t:'Cancelar', c:'btn-secundario' },
+    { r:'sim', t: rotulo || 'Confirmar', c: perigoso ? 'btn-perigo' : 'btn-primario' }
+  ]);
+  return r && r.r === 'sim';
+}
+</script>
+<script>
+/* =============================================================
+   ELOS — biblioteca de exercícios
+   Cada exercício expõe item(d, P) -> Promise<{ok, ms}>
+   onde d é a dificuldade pedida (1–99) e P é o palco.
+   A tradução de d para os parâmetros concretos do exercício
+   (nº de cartas, comprimento da sequência, tempo de exposição,
+   semelhança dos distratores) é feita dentro de cada exercício.
+   ============================================================= */
+'use strict';
+
+/* ---------------- som ---------------- */
+const Som = (() => {
+  let ctx = null, ligado = true;
+  const abrir = () => { if(!ctx){ try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return ctx; };
+  const nota = (f, t0, dur, vol) => {
+    const c = abrir(); if(!c || !ligado) return;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, c.currentTime + t0);
+    g.gain.linearRampToValueAtTime(vol || .12, c.currentTime + t0 + .02);
+    g.gain.exponentialRampToValueAtTime(.0001, c.currentTime + t0 + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(c.currentTime + t0); o.stop(c.currentTime + t0 + dur + .05);
+  };
+  return {
+    ligar(v){ ligado = v; },
+    certo(){ nota(587.33, 0, .16); nota(880, .1, .26); },
+    errado(){ nota(320, 0, .22, .09); },
+    toque(){ nota(660, 0, .07, .07); },
+    tecla(i){ nota([392, 523.25, 659.25, 784][i % 4], 0, .3, .13); },
+    fim(){ [523.25, 659.25, 784, 1046.5].forEach((f, i) => nota(f, i * .13, .3)); }
+  };
+})();
+
+/* ---------------- palco ---------------- */
+function criarPalco(el, prefs){
+  return {
+    el, prefs,
+    montar(instrucao, ajuda, areaHTML){
+      el.innerHTML = `<div class="ses-instrucao" role="heading" aria-level="1">${instrucao}</div>
+        ${ajuda ? `<div class="ses-ajuda">${ajuda}</div>` : ''}
+        <div class="ses-area" data-area>${areaHTML || ''}</div>
+        <div class="retorno" data-retorno role="status" aria-live="polite"></div>`;
+      return el.querySelector('[data-area]');
+    },
+    area(){ return el.querySelector('[data-area]'); },
+    instrucao(txt){ const i = el.querySelector('.ses-instrucao'); if(i) i.innerHTML = txt; },
+    ajuda(txt){ let a = el.querySelector('.ses-ajuda'); if(a) a.innerHTML = txt; },
+    retorno(txt, tipo){ const r = el.querySelector('[data-retorno]'); if(r){ r.className = 'retorno ' + (tipo || ''); r.textContent = txt; } },
+    lento(ms){ return this.prefs.semTempo ? Math.round(ms * 1.6) : ms; }
+  };
+}
+
+function esperarClique(raiz, seletor){
+  return new Promise((res, rej) => {
+    const limpar = () => { raiz.removeEventListener('click', h); window.removeEventListener('elos:abortar', onA); };
+    const h = e => { const t = e.target.closest(seletor); if(t && raiz.contains(t)){ limpar(); res(t); } };
+    const onA = () => { limpar(); rej(ABORTO); };
+    raiz.addEventListener('click', h);
+    window.addEventListener('elos:abortar', onA, { once:true });
+  });
+}
+
+/* Para o utente, dois botões largos leem-se melhor do que quatro estreitos:
+   4 opções vão para 2x2, 3 ficam em linha, 2 lado a lado. */
+const colunasOpcoes = n => (n === 3 ? 3 : 2);
+const estiloOpcoes = n => `style="grid-template-columns:repeat(${colunasOpcoes(n)},1fr);max-width:${colunasOpcoes(n) === 3 ? 780 : 620}px"`;
+
+const ELOGIOS   = ['Muito bem!', 'Boa!', 'Certo!', 'Exatamente!', 'É isso mesmo!', 'Perfeito!'];
+const ENCORAJAR = ['Quase. Vamos ao próximo.', 'Não faz mal. Continuamos.', 'Era outra. Seguimos.', 'Fica para a próxima.'];
+
+async function darRetorno(P, ok, extra){
+  if(ok){ Som.certo(); P.retorno('✓ ' + pick(ELOGIOS), 'bom'); }
+  else  { Som.errado(); P.retorno('→ ' + (extra || pick(ENCORAJAR)), 'mau'); }
+  await espera(ok ? 950 : 1900);
+}
+
+/* ---------------- conteúdos ---------------- */
+const EMOJI_BASE = ['🍎','🐕','🚗','🌞','🔑','☂️','🐟','🌹','🏠','⭐','🍞','👞','📚','🎩','⛵','🕰️','🧀','🐔','🌳','🎈','🥕','🐝','🪑','🧦'];
+
+const COMPRAS = ['pão','leite','ovos','arroz','azeite','batatas','cebola','alho','bacalhau','laranjas','maçãs','café','açúcar','sal','manteiga','queijo','fiambre','tomate','sardinhas','massa','feijão','farinha','iogurte','sabão','jornal','vinho','água','bolachas','cenouras','couve','peixe','frango','mel','canela','arroz doce','marmelada'];
+
+/* Provérbios — dificuldade estimada pela frequência de uso corrente */
+const PROVERBIOS = [
+  ['Cão que ladra', 'não morde', 18],
+  ['Mais vale um pássaro na mão', 'do que dois a voar', 20],
+  ['Água mole em pedra dura', 'tanto bate até que fura', 24],
+  ['Quem não tem cão', 'caça com gato', 24],
+  ['Onde há fumo', 'há fogo', 22],
+  ['Quem semeia ventos', 'colhe tempestades', 30],
+  ['Depois da tempestade', 'vem a bonança', 30],
+  ['Quem tudo quer', 'tudo perde', 28],
+  ['De pequenino se torce', 'o pepino', 32],
+  ['Uma andorinha', 'não faz a Primavera', 32],
+  ['Quem espera', 'sempre alcança', 26],
+  ['Mais vale tarde', 'do que nunca', 20],
+  ['A união', 'faz a força', 22],
+  ['Filho de peixe', 'sabe nadar', 30],
+  ['Quem canta', 'seus males espanta', 28],
+  ['Não deixes para amanhã', 'o que podes fazer hoje', 26],
+  ['Devagar', 'se vai ao longe', 34],
+  ['Quem tem boca', 'vai a Roma', 34],
+  ['O hábito não faz', 'o monge', 40],
+  ['Casa roubada', 'trancas à porta', 44],
+  ['Em terra de cegos', 'quem tem um olho é rei', 42],
+  ['Gato escaldado', 'de água fria tem medo', 40],
+  ['A cavalo dado', 'não se olha o dente', 42],
+  ['Cada macaco', 'no seu galho', 44],
+  ['Grão a grão', 'enche a galinha o papo', 46],
+  ['Quem não arrisca', 'não petisca', 38],
+  ['Deitar cedo e cedo erguer', 'dá saúde e faz crescer', 40],
+  ['As paredes', 'têm ouvidos', 46],
+  ['Quem conta um conto', 'acrescenta um ponto', 52],
+  ['Águas passadas', 'não movem moinhos', 54],
+  ['O seguro', 'morreu de velho', 56],
+  ['Quem muito abarca', 'pouco aperta', 58],
+  ['Amigos, amigos', 'negócios à parte', 50],
+  ['Um homem prevenido', 'vale por dois', 52],
+  ['Não há bela', 'sem senão', 60],
+  ['Quem com ferros mata', 'com ferros morre', 62],
+  ['Burro velho', 'não aprende línguas', 64],
+  ['Quem vai ao mar', 'avia-se em terra', 74],
+  ['Quem dá aos pobres', 'empresta a Deus', 68],
+  ['Casa onde não há pão', 'todos ralham e ninguém tem razão', 76],
+  ['Em casa de ferreiro', 'espeto de pau', 48],
+  ['Quem parte e reparte', 'fica com a melhor parte', 78],
+  ['Diz-me com quem andas', 'dir-te-ei quem és', 44],
+  ['A ocasião', 'faz o ladrão', 56],
+  ['Do mal', 'o menos', 66]
+];
+
+/* Conjuntos de categorização, do concreto ao abstrato */
+const CATEGORIAS = [
+  { d:16, cats:['Fruta','Animal'], itens:[['🍎 Maçã',0],['🍐 Pera',0],['🍇 Uvas',0],['🍊 Laranja',0],['🐕 Cão',1],['🐈 Gato',1],['🐟 Peixe',1],['🐔 Galinha',1]] },
+  { d:26, cats:['Comida','Roupa'], itens:[['Pão',0],['Sopa',0],['Queijo',0],['Arroz',0],['Camisa',1],['Meias',1],['Casaco',1],['Sapatos',1]] },
+  { d:38, cats:['Voa','Nada','Anda'], itens:[['Andorinha',0],['Avião',0],['Abelha',0],['Sardinha',1],['Barco',1],['Golfinho',1],['Cavalo',2],['Comboio',2],['Tartaruga',2]] },
+  { d:48, cats:['Cozinha','Quarto','Casa de banho'], itens:[['Frigorífico',0],['Panela',0],['Fogão',0],['Almofada',1],['Lençol',1],['Roupeiro',1],['Toalha',2],['Sabonete',2],['Escova de dentes',2]] },
+  { d:58, cats:['Profissão','Lugar','Ferramenta'], itens:[['Padeiro',0],['Enfermeira',0],['Pescador',0],['Mercado',1],['Igreja',1],['Estação',1],['Martelo',2],['Agulha',2],['Serrote',2]] },
+  { d:70, cats:['Ver-se','Ouvir-se','Cheirar-se'], itens:[['Arco-íris',0],['Relâmpago',0],['Sombra',0],['Trovão',1],['Assobio',1],['Sino',1],['Café',2],['Alecrim',2],['Maresia',2]] },
+  { d:82, cats:['Instrumento','Transporte','Mobília','Vestuário'], itens:[['Guitarra',0],['Acordeão',0],['Tambor',0],['Autocarro',1],['Bicicleta',1],['Elétrico',1],['Cadeira',2],['Mesa',2],['Cómoda',2],['Gravata',3],['Cinto',3],['Chapéu',3]] }
+];
+
+/* Conjuntos do exercício de atenção: distratores cada vez mais parecidos */
+function conjuntoAtencao(d){
+  if(d < 30) return { alvo:'🌻', outros:['🚗','🏠','🐟','🔑'], nome:'girassol' };
+  if(d < 50) return { alvo:'🌻', outros:['🌷','🌹','🍎','🐝'], nome:'girassol' };
+  if(d < 68) return { alvo:'🌻', outros:['🌼','🌷','🌸','🏵️'], nome:'girassol' };
+  if(d < 84) return { alvo:'M', outros:['N','W','H','X'], nome:'letra M' };
+  return { alvo:'b', outros:['d','p','q','h'], nome:'letra b' };
+}
+
+/* =============================================================
+   1. PARES DE MEMÓRIA — memória visual
+   ============================================================= */
+const jogoPares = {
+  id:'pares', nome:'Pares de Memória', dominio:'memoria', icone:'🀄',
+  resumo:'Virar azulejos e encontrar os pares iguais.',
+  adapta:'Número de pares (2 a 8), tempo de pré-visualização e tolerância de tentativas.',
+  itens: 3,
+  async item(d, P){
+    const pares = clamp(Math.round(2 + d / 16), 2, 8);
+    const espreitar = P.lento(Math.round(clamp(4200 - d * 42, 400, 4200)));
+    const simbolos = amostra(EMOJI_BASE, pares);
+    const cartas = baralhar(simbolos.concat(simbolos)).map((s, i) => ({ s, i, feito:false }));
+    const cols = clamp(Math.ceil(Math.sqrt(cartas.length * 1.35)), 2, 6);
+    const limite = Math.ceil(pares * (2.4 - d / 140));
+
+    const area = P.montar('Encontre os pares iguais', `São ${pares} pares. Não há tempo a contar.`,
+      `<div class="tabuleiro" style="grid-template-columns:repeat(${cols},1fr)">
+        ${cartas.map((c, i) => `<button class="carta" data-i="${i}"><span>${c.s}</span></button>`).join('')}
+      </div>
+      <div style="font-size:.85em;color:var(--ardosia)" data-contador></div>
+      <button class="gbtn" data-desistir style="display:none">Já chega — passar à frente</button>`);
+
+    const els = $$('.carta', area);
+    const contador = area.querySelector('[data-contador]');
+    const desistir = area.querySelector('[data-desistir]');
+    if(espreitar > 300){ P.retorno('Veja onde estão…', ''); await espera(espreitar); }
+    els.forEach(e => e.classList.add('tapada'));
+    P.retorno('', '');
+
+    const t0 = performance.now();
+    let feitos = 0, tentativas = 0, aberta = null, bloqueado = false;
+
+    await new Promise((resolve, rejeitar) => {
+      const onA = () => rejeitar(ABORTO);
+      window.addEventListener('elos:abortar', onA, { once:true });
+      const terminar = v => { window.removeEventListener('elos:abortar', onA); resolve(v); };
+      desistir.addEventListener('click', () => terminar());
+      area.addEventListener('click', async e => {
+        const b = e.target.closest('.carta');
+        if(!b || bloqueado || !b.classList.contains('tapada')) return;
+        b.classList.remove('tapada'); Som.toque();
+        if(aberta === null){ aberta = b; return; }
+        bloqueado = true; tentativas++;
+        const a = aberta, bb = b; aberta = null;
+        contador.textContent = `${feitos} de ${pares} pares · ${tentativas} tentativas`;
+        if(tentativas > limite * 2) desistir.style.display = '';
+        if(cartas[+a.dataset.i].s === cartas[+bb.dataset.i].s){
+          a.classList.add('par'); bb.classList.add('par'); a.disabled = bb.disabled = true;
+          Som.certo(); feitos++;
+          contador.textContent = `${feitos} de ${pares} pares · ${tentativas} tentativas`;
+          bloqueado = false;
+          if(feitos === pares) terminar();
+        } else {
+          await espera(950);
+          a.classList.add('tapada'); bb.classList.add('tapada');
+          bloqueado = false;
+        }
+      });
+    });
+
+    const ms = performance.now() - t0;
+    const ok = feitos === pares && tentativas <= limite;
+    await darRetorno(P, ok, feitos < pares
+      ? `Encontrou ${feitos} de ${pares} pares. Vamos a outro.`
+      : `Completou com ${tentativas} tentativas. Contávamos com ${limite} ou menos.`);
+    return { ok, ms, detalhe:{ pares, feitos, tentativas, limite } };
+  }
+};
+
+/* =============================================================
+   2. SEQUÊNCIA — memória de trabalho (amplitude)
+   ============================================================= */
+const CORES_SEQ = [
+  { f:'#1B4F8C', e:'🔵' }, { f:'#C88A16', e:'🟡' },
+  { f:'#1F7A5C', e:'🟢' }, { f:'#A83232', e:'🔴' }
+];
+const jogoSequencia = {
+  id:'sequencia', nome:'Sequência de Cores', dominio:'memoria', icone:'🔢',
+  resumo:'Ver uma sequência de cores acender e repeti-la pela mesma ordem.',
+  adapta:'Comprimento da sequência (2 a 9) e velocidade de apresentação.',
+  itens: 5,
+  async item(d, P){
+    const n = clamp(Math.round(2 + d / 14), 2, 9);
+    const aceso = P.lento(Math.round(clamp(760 - d * 2.6, 380, 760)));
+    const pausa = P.lento(Math.round(clamp(340 - d * 1.2, 140, 340)));
+    const seq = Array.from({ length:n }, () => rndI(0, 3));
+
+    const area = P.montar('Veja com atenção', `Vão acender ${n} cores. Depois repita pela mesma ordem.`,
+      `<div class="seq-painel">${CORES_SEQ.map((c, i) => `<button class="seq-tecla" data-i="${i}" style="background:${c.f}" disabled aria-label="Cor ${i+1}"></button>`).join('')}</div>`);
+    const teclas = $$('.seq-tecla', area);
+
+    await espera(700);
+    for(const i of seq){
+      teclas[i].classList.add('acesa'); Som.tecla(i);
+      await espera(aceso);
+      teclas[i].classList.remove('acesa');
+      await espera(pausa);
+    }
+
+    P.instrucao('Agora a sua vez'); P.ajuda('Toque nas cores pela mesma ordem.');
+    teclas.forEach(t => t.disabled = false);
+    const t0 = performance.now();
+    let ok = true;
+    for(let k = 0; k < n; k++){
+      const b = await esperarClique(area, '.seq-tecla');
+      const i = +b.dataset.i;
+      b.classList.add('acesa'); Som.tecla(i);
+      setTimeout(() => b.classList.remove('acesa'), 200);
+      if(i !== seq[k]){ ok = false; break; }
+    }
+    const ms = performance.now() - t0;
+    teclas.forEach(t => t.disabled = true);
+    await darRetorno(P, ok, `A sequência era de ${n} cores. Vamos tentar outra.`);
+    return { ok, ms, detalhe:{ comprimento:n } };
+  }
+};
+
+/* =============================================================
+   3. LISTA DE COMPRAS — memória verbal com evocação por reconhecimento
+   ============================================================= */
+const jogoCompras = {
+  id:'compras', nome:'Lista de Compras', dominio:'memoria', icone:'🧺',
+  resumo:'Memorizar uma lista de compras e depois reconhecê-la entre outras palavras.',
+  adapta:'Tamanho da lista (3 a 10), tempo de exposição e número de distratores.',
+  itens: 4,
+  async item(d, P){
+    const n = clamp(Math.round(3 + d / 14), 3, 10);
+    const distr = clamp(Math.round(2 + d / 18), 2, 9);
+    const expor = P.lento(Math.round(n * clamp(2400 - d * 11, 1000, 2400)));
+    const lista = amostra(COMPRAS, n);
+    const outros = amostra(COMPRAS.filter(w => !lista.includes(w)), distr);
+
+    P.montar('Memorize esta lista', `Vai ao mercado comprar ${n} ${n === 1 ? 'coisa' : 'coisas'}.`,
+      `<div class="mostrar-lista">${lista.map(w => `<span>${esc(w)}</span>`).join('')}</div>
+       <div class="tempo-barra"><i data-t></i></div>`);
+    const barra = $('[data-t]', P.area());
+    barra.style.transition = `width ${expor}ms linear`;
+    requestAnimationFrame(() => barra.style.width = '0%');
+    await espera(expor);
+
+    const todas = baralhar(lista.concat(outros));
+    const area = P.montar('O que estava na lista?', 'Toque em todas as que se lembra. Depois toque em Confirmar.',
+      `<div class="palavras">${todas.map((w, i) => `<button class="palavra" data-w="${esc(w)}">${esc(w)}</button>`).join('')}</div>
+       <button class="gbtn gbtn-principal" data-confirmar>Confirmar</button>`);
+
+    const t0 = performance.now();
+    const escolhidas = new Set();
+    area.addEventListener('click', e => {
+      const b = e.target.closest('.palavra'); if(!b) return;
+      const w = b.dataset.w;
+      if(escolhidas.has(w)){ escolhidas.delete(w); b.classList.remove('escolhida'); }
+      else { escolhidas.add(w); b.classList.add('escolhida'); Som.toque(); }
+    });
+    await esperarClique(area, '[data-confirmar]');
+    const ms = performance.now() - t0;
+
+    let acertos = 0, falsos = 0;
+    $$('.palavra', area).forEach(b => {
+      const w = b.dataset.w, era = lista.includes(w), foi = escolhidas.has(w);
+      b.classList.remove('escolhida');
+      if(era && foi){ b.classList.add('certa'); acertos++; }
+      else if(!era && foi){ b.classList.add('falhada'); falsos++; }
+      else if(era && !foi){ b.classList.add('falhada'); }
+    });
+    const pontos = clamp((acertos - falsos * 0.5) / n, 0, 1);
+    const ok = pontos >= 0.7;
+    await darRetorno(P, ok, `Acertou ${acertos} de ${n}${falsos ? ` e escolheu ${falsos} que não estava${falsos>1?'m':''}` : ''}.`);
+    return { ok, ms, detalhe:{ n, acertos, falsos, pontos:Math.round(pontos*100) } };
+  }
+};
+
+/* =============================================================
+   4. ATENÇÃO SELETIVA — cancelamento de alvos
+   ============================================================= */
+const jogoAtencao = {
+  id:'atencao', nome:'Encontrar Iguais', dominio:'atencao', icone:'🔍',
+  resumo:'Encontrar todas as figuras iguais ao modelo, no meio de outras parecidas.',
+  adapta:'Tamanho da grelha, número de alvos e semelhança dos distratores.',
+  itens: 4,
+  async item(d, P){
+    const conj = conjuntoAtencao(d);
+    const total = clamp(Math.round(9 + d * 0.42), 9, 48);
+    const alvos = clamp(Math.round(2 + d / 20), 2, 8);
+    const cols = clamp(Math.round(Math.sqrt(total * 1.2)), 3, 8);
+    const celulas = baralhar(
+      Array.from({ length: alvos }, () => conj.alvo)
+        .concat(Array.from({ length: total - alvos }, () => pick(conj.outros)))
+    );
+
+    const area = P.montar(`Encontre todos os <span style="color:var(--cobalto)">${esc(conj.alvo)}</span>`,
+      `Há ${alvos} iguais a este. Toque em cada um. Sem pressa.`,
+      `<div class="grelha-atencao" style="grid-template-columns:repeat(${cols},1fr)">
+        ${celulas.map((c, i) => `<button class="simbolo" data-i="${i}" data-c="${esc(c)}">${esc(c)}</button>`).join('')}
+      </div>
+      <button class="gbtn gbtn-principal" data-terminei>Já está</button>`);
+
+    const t0 = performance.now();
+    const marcados = new Set();
+    area.addEventListener('click', e => {
+      const b = e.target.closest('.simbolo'); if(!b) return;
+      const i = +b.dataset.i;
+      if(marcados.has(i)){ marcados.delete(i); b.classList.remove('marcado'); }
+      else { marcados.add(i); b.classList.add('marcado'); Som.toque(); }
+    });
+    await esperarClique(area, '[data-terminei]');
+    const ms = performance.now() - t0;
+
+    let certos = 0, falsos = 0, perdidos = 0;
+    $$('.simbolo', area).forEach(b => {
+      const eAlvo = b.dataset.c === conj.alvo, foi = marcados.has(+b.dataset.i);
+      b.classList.remove('marcado');
+      if(eAlvo && foi){ b.classList.add('marcado'); certos++; }
+      else if(!eAlvo && foi){ b.classList.add('falso'); falsos++; }
+      else if(eAlvo && !foi){ b.classList.add('falso'); perdidos++; }
+    });
+    const ok = certos === alvos && falsos <= (d > 60 ? 0 : 1);
+    await darRetorno(P, ok, `Encontrou ${certos} de ${alvos}${falsos ? `, e marcou ${falsos} a mais` : ''}.`);
+    return { ok, ms, detalhe:{ alvos, certos, falsos, perdidos } };
+  }
+};
+
+/* =============================================================
+   5. SINAL CERTO — atenção sustentada (paradigma go / no-go)
+   ============================================================= */
+const jogoSinal = {
+  id:'sinal', nome:'Sinal Certo', dominio:'atencao', icone:'🚦',
+  resumo:'Tocar quando aparece o sinal certo — e conter-se quando não é.',
+  adapta:'Tempo que cada figura fica no ecrã e proporção de sinais a ignorar.',
+  itens: 4,
+  async item(d, P){
+    const alvo = '🟢', naoAlvo = '🔴';
+    const nEst = 6;
+    const janela = P.lento(Math.round(clamp(2700 - d * 17, 850, 2700)));
+    const propNao = clamp(0.25 + d / 400, .25, .45);
+    const seq = Array.from({ length:nEst }, () => Math.random() > propNao);
+
+    const area = P.montar('Toque só no verde',
+      `Vão aparecer ${nEst} círculos. Toque quando for <b>verde</b>. Se for vermelho, não toque.`,
+      `<button class="sinal-palco" data-palco>👀</button>`);
+    const palco = $('[data-palco]', area);
+    await espera(1400);
+
+    let certos = 0, msSoma = 0, msN = 0;
+    for(const eAlvo of seq){
+      palco.textContent = ''; palco.classList.remove('ativo');
+      await espera(rndI(500, 1000));
+      let tocou = false; const t0 = performance.now();
+      const h = () => { if(!tocou){ tocou = true; msSoma += performance.now() - t0; msN++; Som.toque(); } };
+      palco.addEventListener('click', h);
+      palco.textContent = eAlvo ? alvo : naoAlvo;
+      palco.classList.add('ativo');
+      await espera(janela);
+      palco.removeEventListener('click', h);
+      const acertou = (eAlvo && tocou) || (!eAlvo && !tocou);
+      if(acertou) certos++;
+      palco.textContent = acertou ? '✓' : '✕';
+      palco.style.color = acertou ? 'var(--verdete)' : 'var(--tijolo)';
+      await espera(430);
+      palco.style.color = '';
+    }
+    const ok = certos >= Math.ceil(nEst * 0.83);
+    await darRetorno(P, ok, `Acertou em ${certos} de ${nEst} sinais.`);
+    return { ok, ms: msN ? msSoma / msN : janela, detalhe:{ certos, total:nEst, janela } };
+  }
+};
+
+/* =============================================================
+   6. PROVÉRBIOS — linguagem e memória semântica
+   ============================================================= */
+const jogoProverbios = {
+  id:'proverbios', nome:'Provérbios', dominio:'linguagem', icone:'💬',
+  resumo:'Completar provérbios portugueses escolhendo o final certo.',
+  adapta:'Raridade do provérbio e número de opções (2 a 4).',
+  itens: 6,
+  async item(d, P){
+    const nOpc = clamp(Math.round(2 + d / 33), 2, 4);
+    const ordenados = PROVERBIOS.slice().sort((a, b) => Math.abs(a[2] - d) - Math.abs(b[2] - d));
+    const [inicio, fim] = pick(ordenados.slice(0, 8));
+    const erradas = amostra(PROVERBIOS.filter(p => p[1] !== fim).map(p => p[1]), nOpc - 1);
+    const opcoes = baralhar([fim].concat(erradas));
+
+    const area = P.montar('Como acaba este ditado?', '',
+      `<div style="font-size:calc(34px * var(--escala-utente));font-weight:700;color:var(--cobalto-fundo);
+         background:var(--vidrado);border:3px solid var(--cobalto);border-radius:18px;padding:22px 26px;max-width:20ch;line-height:1.3">
+        «${esc(inicio)}…»</div>
+       <div class="opcoes" ${estiloOpcoes(opcoes.length)}>
+        ${opcoes.map(o => `<button class="gbtn" data-o="${esc(o)}">…${esc(o)}</button>`).join('')}
+       </div>`);
+
+    const t0 = performance.now();
+    const b = await esperarClique(area, '[data-o]');
+    const ms = performance.now() - t0;
+    const ok = b.dataset.o === fim;
+    $$('[data-o]', area).forEach(x => { x.disabled = true; if(x.dataset.o === fim) x.classList.add('certo'); });
+    if(!ok) b.classList.add('errado');
+    await darRetorno(P, ok, `«${inicio}, ${fim}.»`);
+    return { ok, ms, detalhe:{ proverbio: inicio, opcoes: nOpc } };
+  }
+};
+
+/* =============================================================
+   7. ARRUMAR POR CATEGORIAS — funções executivas
+   ============================================================= */
+const jogoCategorias = {
+  id:'categorias', nome:'Arrumar por Grupos', dominio:'executivas', icone:'🗂️',
+  resumo:'Decidir a que grupo pertence cada palavra.',
+  adapta:'Número de grupos (2 a 4) e grau de abstração da regra.',
+  itens: 8,
+  async item(d, P){
+    const conj = CATEGORIAS.slice().sort((a, b) => Math.abs(a.d - d) - Math.abs(b.d - d))[0];
+    const [rotulo, idx] = pick(conj.itens);
+    const area = P.montar(`Onde arruma <span style="color:var(--cobalto)">${esc(rotulo)}</span>?`,
+      'Escolha o grupo certo.',
+      `<div class="opcoes" ${estiloOpcoes(conj.cats.length)}>
+        ${conj.cats.map((c, i) => `<button class="gbtn" data-i="${i}">${esc(c)}</button>`).join('')}
+      </div>`);
+    const t0 = performance.now();
+    const b = await esperarClique(area, '[data-i]');
+    const ms = performance.now() - t0;
+    const ok = +b.dataset.i === idx;
+    $$('[data-i]', area).forEach(x => { x.disabled = true; if(+x.dataset.i === idx) x.classList.add('certo'); });
+    if(!ok) b.classList.add('errado');
+    await darRetorno(P, ok, `${rotulo} pertence a «${conj.cats[idx]}».`);
+    return { ok, ms, detalhe:{ regra: conj.cats.join(' / ') } };
+  }
+};
+
+/* =============================================================
+   8. CONTAS DO DIA A DIA — cálculo funcional em euros
+   ============================================================= */
+function gerarConta(d){
+  const it = () => pick(['pão','café','leite','jornal','bolo','sopa','fruta','queijo']);
+  let txt, res, unidade = '€';
+  if(d < 18){
+    const a = rndI(1, 5), b = rndI(1, 4);
+    txt = `Comprou um ${it()} por ${a} € e outro por ${b} €.<br>Quanto gastou ao todo?`; res = a + b;
+  } else if(d < 32){
+    const a = rndI(6, 19), b = rndI(3, 9);
+    txt = `A conta era de ${a} € e pagou ${b} € agora.<br>Quanto falta pagar?`; res = a - b;
+  } else if(d < 46){
+    const p = rndI(2, 7), q = rndI(2, 5);
+    txt = `Cada ${it()} custa ${p} €.<br>Quanto custam ${q}?`; res = p * q;
+  } else if(d < 60){
+    const c = rndI(3, 17), nota = [10, 20, 50].find(n => n > c) || 20;
+    txt = `Gastou ${c} € e pagou com uma nota de ${nota} €.<br>Quanto recebe de troco?`; res = nota - c;
+  } else if(d < 74){
+    const a = (rndI(120, 480) / 100), b = (rndI(90, 350) / 100);
+    txt = `Um ${it()} custa ${euros(a)} e um ${it()} custa ${euros(b)}.<br>Quanto é a conta?`; res = Math.round((a + b) * 100) / 100;
+  } else if(d < 88){
+    const a = (rndI(150, 420) / 100), q = rndI(2, 4);
+    txt = `Levou ${q} pacotes de leite a ${euros(a)} cada.<br>Quanto pagou?`; res = Math.round(a * q * 100) / 100;
+  } else {
+    const a = (rndI(150, 380) / 100), q = rndI(2, 4), nota = 20;
+    txt = `Levou ${q} ${it()}s a ${euros(a)} cada e pagou com ${nota} €.<br>Quanto recebe de troco?`;
+    res = Math.round((nota - a * q) * 100) / 100;
+  }
+  const dec = res % 1 !== 0;
+  const fmt = v => dec ? euros(Math.round(v * 100) / 100) : `${Math.round(v)} €`;
+  const desvios = new Set([fmt(res)]);
+  let guarda = 0;
+  while(desvios.size < 4 && guarda++ < 60){
+    const dv = dec ? res + pick([-2.1, -1.05, -0.5, 0.5, 1.05, 2.1, -0.1, 0.1]) : res + pick([-3, -2, -1, 1, 2, 3, 5, -5]);
+    if(dv > 0) desvios.add(fmt(dv));
+  }
+  return { txt, certo: fmt(res), opcoes: baralhar(Array.from(desvios)).slice(0, 4) };
+}
+
+const jogoContas = {
+  id:'contas', nome:'Contas do Dia a Dia', dominio:'calculo', icone:'🧾',
+  resumo:'Resolver situações de compras e trocos em euros.',
+  adapta:'Tipo de operação, grandeza dos números e presença de cêntimos.',
+  itens: 6,
+  async item(d, P){
+    const c = gerarConta(d);
+    const area = P.montar('Faça a conta', '',
+      `<div style="font-size:calc(26px * var(--escala-utente));font-weight:700;color:var(--cobalto-fundo);
+        background:var(--vidrado);border:3px solid var(--cobalto);border-radius:18px;padding:22px 26px;max-width:24ch;line-height:1.35">${c.txt}</div>
+       <div class="opcoes" ${estiloOpcoes(c.opcoes.length)}>${c.opcoes.map(o => `<button class="gbtn" data-o="${esc(o)}">${esc(o)}</button>`).join('')}</div>`);
+    const t0 = performance.now();
+    const b = await esperarClique(area, '[data-o]');
+    const ms = performance.now() - t0;
+    const ok = b.dataset.o === c.certo;
+    $$('[data-o]', area).forEach(x => { x.disabled = true; if(x.dataset.o === c.certo) x.classList.add('certo'); });
+    if(!ok) b.classList.add('errado');
+    await darRetorno(P, ok, `A resposta era ${c.certo}.`);
+    return { ok, ms, detalhe:{} };
+  }
+};
+
+/* =============================================================
+   9. AQUI E AGORA — orientação temporal e espacial
+   ============================================================= */
+function gerarOrientacao(d, instituicao){
+  const agora = new Date();
+  const banco = [];
+  const h = agora.getHours();
+  const parteDia = h < 12 ? 'Manhã' : h < 19 ? 'Tarde' : 'Noite';
+  banco.push({ d:8, p:'Estamos de manhã, de tarde ou de noite?', c:parteDia, o:['Manhã','Tarde','Noite'] });
+  const m = agora.getMonth();
+  const estacao = (m >= 2 && m <= 4) ? 'Primavera' : (m >= 5 && m <= 7) ? 'Verão' : (m >= 8 && m <= 10) ? 'Outono' : 'Inverno';
+  banco.push({ d:22, p:'Em que estação do ano estamos?', c:estacao, o:['Primavera','Verão','Outono','Inverno'] });
+  const dia = DIAS[agora.getDay()];
+  banco.push({ d:36, p:'Que dia da semana é hoje?', c:dia, o:baralhar(DIAS).filter(x => x !== dia).slice(0,3).concat([dia]) });
+  banco.push({ d:44, p:'Em que mês estamos?', c:MESES[m], o:baralhar(MESES).filter(x => x !== MESES[m]).slice(0,3).concat([MESES[m]]) });
+  if(instituicao) banco.push({ d:30, p:'Onde estamos agora?', c:instituicao, o:[instituicao,'Numa escola','No hospital','Em casa'] });
+  const ano = agora.getFullYear();
+  banco.push({ d:56, p:'Em que ano estamos?', c:String(ano), o:[String(ano), String(ano-1), String(ano+1), String(ano-2)] });
+  const dm = agora.getDate();
+  banco.push({ d:66, p:'Em que dia do mês estamos?', c:String(dm), o:baralhar([dm, clamp(dm+2,1,28), clamp(dm-3,1,28), clamp(dm+5,1,28)].map(String)) });
+  const amanha = new Date(agora.getTime() + 86400000);
+  banco.push({ d:74, p:'Que dia da semana é amanhã?', c:DIAS[amanha.getDay()], o:baralhar(DIAS).filter(x => x !== DIAS[amanha.getDay()]).slice(0,3).concat([DIAS[amanha.getDay()]]) });
+  const faltam = new Date(ano, m + 1, 0).getDate() - dm;
+  banco.push({ d:88, p:'Quantos dias faltam para acabar o mês?', c:String(faltam), o:baralhar([faltam, faltam+3, Math.max(0,faltam-2), faltam+6].map(String)) });
+  return banco.sort((a, b) => Math.abs(a.d - d) - Math.abs(b.d - d));
+}
+
+const jogoOrientacao = {
+  id:'orientacao', nome:'Aqui e Agora', dominio:'orientacao', icone:'🧭',
+  resumo:'Responder sobre o dia, o mês, a estação e o sítio onde estamos.',
+  adapta:'Da parte do dia (mais fácil) até à contagem de dias no calendário.',
+  itens: 5,
+  async item(d, P, memoria){
+    memoria = memoria || {};
+    const banco = gerarOrientacao(d, S.instituicao).filter(q => !(memoria.usadas || []).includes(q.p));
+    const q = banco[0] || gerarOrientacao(d, S.instituicao)[0];
+    memoria.usadas = (memoria.usadas || []).concat([q.p]);
+    const opcoes = baralhar(Array.from(new Set(q.o))).slice(0, 4);
+    if(!opcoes.includes(q.c)) opcoes[0] = q.c;
+    const area = P.montar(esc(q.p), '',
+      `<div class="opcoes" ${estiloOpcoes(opcoes.length)}>
+        ${baralhar(opcoes).map(o => `<button class="gbtn" data-o="${esc(o)}">${esc(o[0].toUpperCase()+o.slice(1))}</button>`).join('')}
+      </div>`);
+    const t0 = performance.now();
+    const b = await esperarClique(area, '[data-o]');
+    const ms = performance.now() - t0;
+    const ok = b.dataset.o === q.c;
+    $$('[data-o]', area).forEach(x => { x.disabled = true; if(x.dataset.o === q.c) x.classList.add('certo'); });
+    if(!ok) b.classList.add('errado');
+    await darRetorno(P, ok, `Hoje é ${dataLonga(new Date())}.`);
+    return { ok, ms, detalhe:{ pergunta:q.p } };
+  }
+};
+
+const JOGOS = [jogoPares, jogoSequencia, jogoCompras, jogoAtencao, jogoSinal, jogoProverbios, jogoCategorias, jogoContas, jogoOrientacao];
+const jogoPorId = id => JOGOS.find(j => j.id === id);
+</script>
+<script>
+/* =============================================================
+   ELOS — condução da sessão (modo utente)
+   ============================================================= */
+'use strict';
+
+function aplicarPrefs(u){
+  document.documentElement.style.setProperty('--escala-utente', u.prefs.escala || 1);
+  document.body.classList.toggle('contraste', !!u.prefs.contraste);
+  Som.ligar(u.prefs.som !== false);
+}
+function limparPrefs(){
+  document.documentElement.style.setProperty('--escala-utente', 1);
+  document.body.classList.remove('contraste');
+  Som.ligar(true);
+}
+
+const Sessao = {
+  ativa: null,
+
+  async escolherUtente(){
+    const ativos = S.utentes.filter(u => u.ativo !== false);
+    if(!ativos.length){
+      await abrirModal('Ainda não há utentes', `<p style="margin:0;color:var(--ardosia)">Para começar uma sessão é preciso registar pelo menos um utente. Entre na área profissional e adicione o primeiro.</p>`);
+      return irPara('entrada');
+    }
+    mostrarVista('sessao');
+    limparPrefs();
+    $('#ses-quem').textContent = 'Nova sessão';
+    $('#ses-passos').innerHTML = '';
+    $('#ses-sair').textContent = 'Voltar';
+    const P = criarPalco($('#ses-palco'), { semTempo:false });
+    const area = P.montar('Quem vai fazer os exercícios?', 'Toque no nome da pessoa.',
+      `<div class="opcoes op3">
+        ${ativos.map(u => `<button class="gbtn" data-u="${u.id}">${esc(u.nome || u.iniciais)}${u.quarto ? `<br><small style="font-weight:400;opacity:.6">${esc(u.quarto)}</small>` : ''}</button>`).join('')}
+      </div>`);
+    try{
+      const b = await esperarClique(area, '[data-u]');
+      this.preparar(b.dataset.u);
+    }catch(e){ /* saiu */ }
+  },
+
+  async preparar(utenteId){
+    const u = utentePorId(utenteId);
+    aplicarPrefs(u);
+    const plano = planoSessao(u);
+    const modo = MODOS_DESAFIO[modoDesafioDe(u)];
+    $('#ses-quem').textContent = u.nome || u.iniciais;
+    $('#ses-sair').textContent = 'Voltar';
+    const P = criarPalco($('#ses-palco'), u.prefs);
+    const primeiro = (u.nome || '').split(' ')[0] || u.iniciais;
+    const area = P.montar(`Olá, ${esc(primeiro)}`,
+      `Hoje temos ${plano.length} exercícios. Leva à volta de ${Math.round(plano.length * 3)} minutos e pode parar quando quiser.`,
+      `<div class="resumo">
+        ${plano.map((p, i) => `<div class="resumo-linha">
+          <div class="ic">${p.jogo.icone}</div>
+          <div class="txt"><b>${i+1}. ${esc(p.jogo.nome)}</b><small>${esc(p.jogo.resumo)}</small></div>
+        </div>`).join('')}
+      </div>
+      <button class="gbtn gbtn-principal" data-comecar>Começar</button>
+      <div style="font-size:.72em;color:var(--ardosia)">Modo ${esc(modo.nome)}</div>`);
+    try{
+      await esperarClique(area, '[data-comecar]');
+      this.correr(u, plano);
+    }catch(e){ limparPrefs(); irPara('entrada'); }
+  },
+
+  async correr(u, plano){
+    const P = criarPalco($('#ses-palco'), u.prefs);
+    const registo = {
+      id: uid(), utenteId: u.id, inicio: new Date().toISOString(),
+      dinamizador: S.dinamizador || '', blocos: [], interrompida: false
+    };
+    this.ativa = { registo, u };
+    $('#ses-sair').textContent = 'Terminar';
+
+    const passos = $('#ses-passos');
+    const pintar = i => { passos.innerHTML = plano.map((_, k) =>
+      `<span class="ses-passo ${k < i ? 'feito' : k === i ? 'agora' : ''}"></span>`).join(''); };
+
+    const modo = modoDesafioDe(u);
+    let interrompido = false;
+
+    try{
+      for(let b = 0; b < plano.length; b++){
+        const jogo = plano[b].jogo;
+        pintar(b);
+
+        const area = P.montar(`<span style="font-size:1.4em">${jogo.icone}</span><br>${esc(jogo.nome)}`,
+          esc(jogo.resumo),
+          `<button class="gbtn gbtn-principal" data-ir>Começar — ${b+1} de ${plano.length}</button>`);
+        await esperarClique(area, '[data-ir]');
+
+        const nItens = jogo.itens || S.itensPorJogo;
+        const bloco = { jogo: jogo.id, dominio: jogo.dominio, tAntes: u.perfil[jogo.dominio].t, itens: [] };
+        let erradosSeguidos = 0, alivio = 0;
+        const memoria = {};
+
+        for(let k = 0; k < nItens; k++){
+          const theta = u.perfil[jogo.dominio].t;
+          const d = clamp(Motor.alvo(theta, modo) - alivio, 1, 99);
+          const r = await jogo.item(d, P, memoria);
+
+          const n = u.perfil[jogo.dominio].n;
+          u.perfil[jogo.dominio].t = Motor.rever(theta, d, r.ok, n);
+          u.perfil[jogo.dominio].n = n + 1;
+          bloco.itens.push({ d: Math.round(d), ok: r.ok, ms: Math.round(r.ms || 0) });
+
+          /* Travão de frustração — três falhas seguidas baixam a fasquia
+             e dão ao utente a hipótese de saltar o exercício. */
+          if(r.ok){ erradosSeguidos = 0; alivio = Math.max(0, alivio - 4); }
+          else if(++erradosSeguidos >= 3){
+            alivio = Math.min(26, alivio + 11); erradosSeguidos = 0;
+            const a2 = P.montar('Vamos com mais calma', 'Estes estavam difíceis. Os próximos serão mais fáceis.',
+              `<div class="opcoes op2">
+                <button class="gbtn gbtn-principal" data-seg>Continuar</button>
+                <button class="gbtn" data-salt>Passar ao próximo</button>
+              </div>`);
+            const esc2 = await esperarClique(a2, '[data-seg],[data-salt]');
+            if(esc2.hasAttribute('data-salt')) break;
+          }
+        }
+
+        bloco.tDepois = u.perfil[jogo.dominio].t;
+        if(bloco.itens.length) registo.blocos.push(bloco);
+        u.ultimosJogos = (u.ultimosJogos || []).concat([jogo.id]).slice(-12);
+        await gravar();
+      }
+    }catch(e){
+      if(e === ABORTO) interrompido = true;
+      else console.error(e);
+    }
+
+    pintar(plano.length);
+    registo.fim = new Date().toISOString();
+    registo.interrompida = interrompido;
+    if(registo.blocos.length){ S.sessoes.push(registo); }
+    await gravar();
+    this.ativa = null;
+    this.fechar(u, registo);
+  },
+
+  async fechar(u, registo){
+    const P = criarPalco($('#ses-palco'), u.prefs);
+    $('#ses-sair').textContent = 'Voltar';
+    Som.fim();
+    let itens = 0, certos = 0;
+    registo.blocos.forEach(b => b.itens.forEach(i => { itens++; if(i.ok) certos++; }));
+    const min = Math.max(1, Math.round((new Date(registo.fim) - new Date(registo.inicio)) / 60000));
+    const primeiro = (u.nome || '').split(' ')[0] || '';
+
+    const linhas = registo.blocos.map(b => {
+      const j = jogoPorId(b.jogo);
+      const c = b.itens.filter(i => i.ok).length;
+      const delta = b.tDepois - b.tAntes;
+      return `<div class="resumo-linha">
+        <div class="ic">${j.icone}</div>
+        <div class="txt"><b>${esc(j.nome)}</b><small>${c} de ${b.itens.length} certos</small></div>
+        <div style="font-weight:700;font-size:1.05em;color:${delta >= 0 ? 'var(--verdete)' : 'var(--ardosia)'}">${delta >= 0 ? '+' : ''}${delta.toFixed(1)}</div>
+      </div>`;
+    }).join('');
+
+    const area = P.montar('Terminámos por hoje 👏',
+      itens ? `${certos} de ${itens} exercícios certos, em ${min} minuto${min > 1 ? 's' : ''}. Obrigado${primeiro ? ', ' + esc(primeiro) : ''}!`
+            : 'A sessão ficou para outro dia. Sem problema.',
+      `<div class="resumo">${linhas || ''}</div>
+       <button class="gbtn gbtn-principal" data-fim>Fechar sessão</button>`);
+    try{ await esperarClique(area, '[data-fim]'); }catch(e){}
+    if(registo.blocos.length) await this.notasDaEquipa(registo);
+    limparPrefs();
+    irPara('entrada');
+  },
+
+  async notasDaEquipa(registo){
+    const r = await abrirModal('Registo da equipa', `
+      <p style="margin:0 0 16px;color:var(--ardosia);font-size:13.5px">Duas notas rápidas para o histórico. Pode deixar em branco.</p>
+      <label class="campo"><span>Como reagiu o utente?</span>
+        <div class="chips" data-humor>
+          ${[['bem','😊 Participou bem'],['normal','🙂 Normal'],['cansado','😐 Cansado'],['agitado','😕 Agitado ou recusou']]
+            .map(([v,t],i) => `<button type="button" class="chip" data-v="${v}" aria-pressed="${i===1}">${t}</button>`).join('')}
+        </div>
+      </label>
+      <label class="campo"><span>Observações</span>
+        <textarea rows="3" data-notas placeholder="Ex.: cansou-se no terceiro exercício; falou da neta durante os provérbios."></textarea></label>
+      <label class="campo"><span>Quem dinamizou</span>
+        <input type="text" data-dinam value="${esc(S.dinamizador || '')}" placeholder="O seu nome"></label>`,
+      [{ r:'ok', t:'Guardar', c:'btn-primario' }]);
+    if(r){
+      const m = r.modal;
+      const chip = m.querySelector('[data-humor] .chip[aria-pressed="true"]');
+      registo.humor = chip ? chip.dataset.v : 'normal';
+      registo.notas = m.querySelector('[data-notas]').value.trim();
+      registo.dinamizador = m.querySelector('[data-dinam]').value.trim();
+      S.dinamizador = registo.dinamizador;
+      await gravar();
+      torrada('Sessão guardada');
+    }
+  }
+};
+
+/* chips de humor */
+document.addEventListener('click', e => {
+  const c = e.target.closest('[data-humor] .chip');
+  if(!c) return;
+  $$('.chip', c.parentElement).forEach(x => x.setAttribute('aria-pressed', 'false'));
+  c.setAttribute('aria-pressed', 'true');
+});
+</script>
+<script>
+/* =============================================================
+   ELOS — área profissional
+   ============================================================= */
+'use strict';
+
+const Pro = {
+  pane: 'painel',
+  arg: null,
+  aba: 'geral',
+
+  ir(pane, arg){
+    this.pane = pane; this.arg = arg || null;
+    if(pane !== 'utente') this.aba = 'geral';
+    $$('.rail-btn[data-pane]').forEach(b => b.setAttribute('aria-current', String(b.dataset.pane === pane)));
+    this.render();
+    $('#pro-tela').scrollTo?.(0, 0);
+    window.scrollTo(0, 0);
+  },
+
+  render(){
+    const t = $('#pro-tela');
+    $('#rail-instituicao').textContent = S.instituicao || 'Instituição por definir';
+    t.innerHTML = ({
+      painel:     () => this.painel(),
+      utentes:    () => this.utentes(),
+      utente:     () => this.utente(this.arg),
+      exercicios: () => this.exercicios(),
+      definicoes: () => this.definicoes()
+    }[this.pane] || (() => this.painel()))();
+  },
+
+  /* ---------------- PAINEL ---------------- */
+  painel(){
+    const us = S.utentes.filter(u => u.ativo !== false);
+    const hoje = new Date().toDateString();
+    const sessoesHoje = S.sessoes.filter(s => new Date(s.inicio).toDateString() === hoje).length;
+    const seteDias = S.sessoes.filter(s => Date.now() - new Date(s.inicio) < 7 * 86400000);
+    let itens = 0, certos = 0;
+    seteDias.forEach(s => (s.blocos||[]).forEach(b => b.itens.forEach(i => { itens++; if(i.ok) certos++; })));
+
+    const alertas = [];
+    us.forEach(u => sinais(u).filter(x => x.tipo === 'alerta' || x.tipo === 'aviso')
+      .forEach(x => alertas.push({ u, ...x })));
+
+    const mediaDom = CHAVES_DOM.map(k => {
+      const comDados = us.filter(u => u.perfil[k].n > 0);
+      return { k, v: comDados.length ? comDados.reduce((a, u) => a + u.perfil[k].t, 0) / comDados.length : null, n: comDados.length };
+    });
+
+    const recentes = S.sessoes.slice().sort((a,b) => new Date(b.inicio) - new Date(a.inicio)).slice(0, 8);
+
+    return `
+    <div class="tela-cab">
+      <div><div class="eyebrow">Painel</div><h1>${esc(S.instituicao || 'A sua instituição')}</h1>
+        <div class="sub">${dataLonga(new Date())}</div></div>
+      <button class="btn btn-primario" onclick="Sessao.escolherUtente()">Iniciar sessão</button>
+    </div>
+
+    <div class="grelha g4" style="margin-bottom:16px">
+      ${[
+        ['Utentes ativos', us.length, ''],
+        ['Sessões hoje', sessoesHoje, ''],
+        ['Sessões (7 dias)', seteDias.length, ''],
+        ['Acerto (7 dias)', itens ? Math.round(certos/itens*100) + '%' : '—', itens ? `${itens} exercícios` : 'sem dados']
+      ].map(([r,v,d]) => `<div class="cartao metrica"><div class="valor">${v}</div><div class="rot">${r}</div>${d?`<div class="delta igual">${d}</div>`:''}</div>`).join('')}
+    </div>
+
+    <div class="grelha g2">
+      <div class="cartao">
+        <div class="cartao-cab"><h3>A precisar de atenção</h3><span class="selo selo-neutro">${alertas.length}</span></div>
+        ${alertas.length ? alertas.slice(0, 7).map(a => `
+          <button class="lista-btn" onclick="Pro.ir('utente','${a.u.id}')">
+            <span class="selo selo-${a.tipo === 'alerta' ? 'alerta' : 'aviso'}">${a.tipo === 'alerta' ? '!' : '·'}</span>
+            <span style="flex:1"><b>${esc(a.u.nome || a.u.iniciais)}</b><br><small style="color:var(--ardosia)">${esc(a.txt)}</small></span>
+          </button>`).join('')
+          : `<p style="color:var(--ardosia-clara);font-size:13.5px;margin:0">Nada a assinalar. Todos os utentes com sessões recentes e sem descidas relevantes.</p>`}
+      </div>
+
+      <div class="cartao">
+        <div class="cartao-cab"><h3>Média por domínio na instituição</h3></div>
+        ${mediaDom.map(m => `<div style="margin-bottom:11px">
+          <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px">
+            <span style="font-weight:600;color:var(--cobalto-fundo)">${esc(DOMINIOS[m.k].nome)}</span>
+            <span class="num" style="color:var(--ardosia)">${m.v === null ? '—' : Math.round(m.v)}</span></div>
+          <div class="barra"><i style="width:${m.v || 0}%"></i></div>
+        </div>`).join('')}
+        <p style="font-size:11.5px;color:var(--ardosia-clara);margin:12px 0 0">Médias apenas sobre utentes com exercícios registados no domínio.</p>
+      </div>
+    </div>
+
+    <div class="cartao" style="margin-top:14px">
+      <div class="cartao-cab"><h3>Últimas sessões</h3></div>
+      ${recentes.length ? `<table class="tab"><thead><tr><th>Utente</th><th>Data</th><th>Exercícios</th><th>Acerto</th><th>Reação</th><th></th></tr></thead><tbody>
+        ${recentes.map(s => {
+          const u = utentePorId(s.utenteId); if(!u) return '';
+          let it = 0, ce = 0; (s.blocos||[]).forEach(b => b.itens.forEach(i => { it++; if(i.ok) ce++; }));
+          const hm = { bem:'😊', normal:'🙂', cansado:'😐', agitado:'😕' }[s.humor] || '·';
+          return `<tr><td><b>${esc(u.nome || u.iniciais)}</b></td>
+            <td class="num">${dataCurta(s.inicio)} · ${horaCurta(s.inicio)}</td>
+            <td class="num">${it}</td><td class="num">${it ? Math.round(ce/it*100)+'%' : '—'}</td>
+            <td>${hm}${s.interrompida ? ' <span class="selo selo-aviso">interrompida</span>' : ''}</td>
+            <td style="text-align:right"><button class="btn btn-fantasma" onclick="Pro.ir('utente','${u.id}')">Ver →</button></td></tr>`;
+        }).join('')}
+      </tbody></table>` : `<p style="color:var(--ardosia-clara);font-size:13.5px;margin:0">Ainda sem sessões. Comece pela primeira.</p>`}
+    </div>
+
+    <div class="nota-clinica" style="margin-top:18px">
+      <b>Como ler estes números.</b> O índice de cada domínio (0–100) é uma estimativa da dificuldade que o utente resolve com cerca de 50% de probabilidade — é uma medida de desempenho nos exercícios do Elos, não um resultado de avaliação neuropsicológica. Serve para ajustar as sessões e para sinalizar mudanças que valha a pena discutir com a equipa clínica.
+    </div>`;
+  },
+
+  /* ---------------- LISTA DE UTENTES ---------------- */
+  utentes(){
+    const us = S.utentes;
+    return `
+    <div class="tela-cab">
+      <div><div class="eyebrow">Acompanhamento</div><h1>Utentes</h1>
+        <div class="sub">${us.filter(u=>u.ativo!==false).length} ativos${us.length - us.filter(u=>u.ativo!==false).length ? ` · ${us.length - us.filter(u=>u.ativo!==false).length} inativos` : ''}</div></div>
+      <button class="btn btn-primario" onclick="Pro.editarUtente()">+ Novo utente</button>
+    </div>
+    ${us.length ? `<div class="utente-grelha">${us.map(u => this.cartaoUtente(u)).join('')}</div>` : `
+      <div class="vazio">
+        <h3>Ainda não há ninguém registado</h3>
+        <p>Cada utente tem um perfil próprio com o seu nível em seis domínios cognitivos. As sessões calibram-se a esse perfil desde o primeiro exercício.</p>
+        <button class="btn btn-primario" onclick="Pro.editarUtente()">Registar o primeiro utente</button>
+      </div>`}`;
+  },
+
+  cartaoUtente(u){
+    const e = estatisticasUtente(u), idx = indiceGlobal(u), serie = serieIndice(u);
+    const sg = sinais(u).find(s => s.tipo === 'alerta') || sinais(u).find(s => s.tipo === 'aviso');
+    return `<button class="utente-cartao" onclick="Pro.ir('utente','${u.id}')">
+      <div class="utente-topo">
+        <div class="avatar">${esc(u.iniciais || (u.nome||'?').slice(0,2).toUpperCase())}</div>
+        <div style="flex:1;min-width:0">
+          <div class="utente-nome">${esc(u.nome || u.iniciais)}</div>
+          <div class="utente-meta">${u.anoNascimento ? (new Date().getFullYear() - u.anoNascimento) + ' anos' : 'idade n/d'}${u.quarto ? ' · ' + esc(u.quarto) : ''}${u.ativo === false ? ' · inativo' : ''}</div>
+        </div>
+        <div style="text-align:right">${sparkline(serie, 62, 26)}</div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px">
+        <span style="color:var(--ardosia)">Índice global</span>
+        <span class="num" style="font-weight:700;color:var(--cobalto-fundo)">${observacoes(u) ? idx : '—'}</span>
+      </div>
+      <div class="barra"><i style="width:${observacoes(u) ? idx : 0}%"></i></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:11px;gap:8px">
+        <span class="utente-meta">${e.sessoes} sessõe${e.sessoes===1?'':'s'}${e.ultima ? ' · última ' + dataCurta(e.ultima) : ''}</span>
+        ${sg ? `<span class="selo selo-${sg.tipo === 'alerta' ? 'alerta' : 'aviso'}">${esc(sg.tipo === 'alerta' ? 'rever' : 'atenção')}</span>` : ''}
+      </div>
+    </button>`;
+  },
+
+  /* ---------------- DETALHE DO UTENTE ---------------- */
+  utente(id){
+    const u = utentePorId(id);
+    if(!u) return this.utentes();
+    const e = estatisticasUtente(u), serie = serieIndice(u), ss = sessoesDe(u.id).slice().reverse();
+    const abas = [['geral','Visão geral'],['evolucao','Evolução'],['sessoes','Sessões'],['perfil','Perfil e preferências']];
+
+    const corpo = {
+      geral: () => `
+        <div class="grelha g2">
+          <div class="cartao">
+            <div class="cartao-cab"><h3>Mosaico cognitivo</h3>
+              <span class="num" style="font-family:var(--f-titulo);font-weight:800;font-size:26px;color:var(--cobalto-fundo)">${observacoes(u) ? indiceGlobal(u) : '—'}</span></div>
+            ${mosaicoHTML(u)}
+          </div>
+          <div class="cartao">
+            <div class="cartao-cab"><h3>Detalhe por domínio</h3></div>
+            ${barrasDominio(u)}
+          </div>
+        </div>
+
+        <div class="grelha g4" style="margin-top:14px">
+          ${[['Sessões', e.sessoes], ['Exercícios', e.itens],
+             ['Acerto médio', e.acerto === null ? '—' : Math.round(e.acerto*100)+'%'],
+             ['Tempo médio', e.tempoMedio === null ? '—' : e.tempoMedio + 's']]
+            .map(([r,v]) => `<div class="cartao metrica"><div class="valor">${v}</div><div class="rot">${r}</div></div>`).join('')}
+        </div>
+
+        ${(() => { const sg = sinais(u); return sg.length ? `<div class="cartao" style="margin-top:14px">
+          <div class="cartao-cab"><h3>Sinais</h3></div>
+          ${sg.map(s => `<div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:8px">
+            <span class="selo selo-${s.tipo === 'alerta' ? 'alerta' : s.tipo === 'ok' ? 'ok' : s.tipo === 'aviso' ? 'aviso' : 'neutro'}">${s.tipo === 'alerta' ? '!' : s.tipo === 'ok' ? '↑' : '·'}</span>
+            <span style="font-size:13.5px;color:var(--ardosia)">${esc(s.txt)}</span></div>`).join('')}
+        </div>` : ''; })()}
+
+        <div class="cartao" style="margin-top:14px">
+          <div class="cartao-cab"><h3>Plano sugerido para a próxima sessão</h3>
+            <button class="btn btn-secundario" onclick="Sessao.preparar('${u.id}');mostrarVista('sessao')">Iniciar agora</button></div>
+          ${planoSessao(u).map((p, i) => `<div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--junta)">
+            <span style="font-size:22px">${p.jogo.icone}</span>
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:14px;color:var(--cobalto-fundo)">${i+1}. ${esc(p.jogo.nome)}
+                <span class="selo selo-neutro" style="margin-left:6px">${esc(p.papel)}</span></div>
+              <div style="font-size:12.5px;color:var(--ardosia);margin-top:2px">${esc(p.porque)}</div>
+              <div style="font-size:11.5px;color:var(--ardosia-clara);margin-top:2px">Dificuldade de partida: ${Math.round(Motor.alvo(u.perfil[p.dominio].t, modoDesafioDe(u)))}/100</div>
+            </div></div>`).join('')}
+          <p style="font-size:11.5px;color:var(--ardosia-clara);margin:12px 0 0">A ordem não é aleatória: abre no domínio mais preservado, trabalha os mais frágeis a meio e fecha num domínio intermédio.</p>
+        </div>`,
+
+      evolucao: () => `
+        <div class="cartao">
+          <div class="cartao-cab"><h3>Índice global ao longo do tempo</h3>
+            ${e.tendencia !== null ? `<span class="delta ${e.tendencia > 1 ? 'sobe' : e.tendencia < -1 ? 'desce' : 'igual'}">${e.tendencia > 0 ? '+' : ''}${e.tendencia.toFixed(1)} pontos recentes</span>` : ''}</div>
+          ${grafLinha(serie)}
+        </div>
+        <div class="grelha g2" style="margin-top:14px">
+          ${CHAVES_DOM.map(k => {
+            const pts = [];
+            const perfil = NIVEIS[u.nivel || 'moderado'].theta;
+            let v = perfil;
+            sessoesDe(u.id).forEach(s => { const b = (s.blocos||[]).find(x => x.dominio === k);
+              if(b){ v = b.tDepois; pts.push({ x:new Date(s.inicio).getTime(), y:v }); } });
+            return `<div class="cartao">
+              <div class="cartao-cab"><h3>${esc(DOMINIOS[k].nome)}</h3>
+                <span class="num" style="font-weight:700;color:var(--cobalto-fundo)">${u.perfil[k].n ? Math.round(u.perfil[k].t) : '—'}</span></div>
+              ${pts.length >= 2 ? grafLinha(pts) : `<p style="font-size:12.5px;color:var(--ardosia-clara);margin:0">${u.perfil[k].n ? 'Faltam sessões para desenhar a curva.' : 'Ainda sem exercícios neste domínio.'}</p>`}
+            </div>`;
+          }).join('')}
+        </div>`,
+
+      sessoes: () => ss.length ? `
+        <div class="cartao">
+          <div class="cartao-cab"><h3>Histórico</h3>
+            <button class="btn btn-secundario" onclick="exportarCSV('${u.id}')">Exportar CSV</button></div>
+          <table class="tab"><thead><tr><th>Data</th><th>Duração</th><th>Exercícios</th><th>Acerto</th><th>Reação</th><th>Notas</th></tr></thead><tbody>
+            ${ss.map(s => {
+              let it = 0, ce = 0; (s.blocos||[]).forEach(b => b.itens.forEach(i => { it++; if(i.ok) ce++; }));
+              const dur = Math.max(1, Math.round((new Date(s.fim || s.inicio) - new Date(s.inicio)) / 60000));
+              const hm = { bem:'😊 bem', normal:'🙂 normal', cansado:'😐 cansado', agitado:'😕 agitado' }[s.humor] || '—';
+              return `<tr>
+                <td class="num">${dataCurta(s.inicio)}<br><small style="color:var(--ardosia-clara)">${horaCurta(s.inicio)}${s.dinamizador ? ' · ' + esc(s.dinamizador) : ''}</small></td>
+                <td class="num">${dur} min</td>
+                <td>${(s.blocos||[]).map(b => (jogoPorId(b.jogo)||{}).icone || '').join(' ')} <span class="num" style="color:var(--ardosia)">(${it})</span></td>
+                <td class="num">${it ? Math.round(ce/it*100)+'%' : '—'}</td>
+                <td>${hm}${s.interrompida ? '<br><span class="selo selo-aviso">interrompida</span>' : ''}</td>
+                <td style="max-width:240px;font-size:12.5px;color:var(--ardosia)">${esc(s.notas || '')}</td>
+              </tr>`;
+            }).join('')}
+          </tbody></table>
+        </div>` : `<div class="vazio"><h3>Sem sessões registadas</h3><p>Assim que fizer a primeira sessão, o histórico aparece aqui com o detalhe de cada exercício.</p>
+          <button class="btn btn-primario" onclick="Sessao.preparar('${u.id}');mostrarVista('sessao')">Iniciar sessão</button></div>`,
+
+      perfil: () => `
+        <div class="grelha g2">
+          <div class="cartao">
+            <div class="cartao-cab"><h3>Dados</h3><button class="btn btn-secundario" onclick="Pro.editarUtente('${u.id}')">Editar</button></div>
+            <table class="tab"><tbody>
+              <tr><td style="color:var(--ardosia);width:42%">Nome</td><td><b>${esc(u.nome || '—')}</b></td></tr>
+              <tr><td style="color:var(--ardosia)">Iniciais / código</td><td>${esc(u.iniciais || '—')}</td></tr>
+              <tr><td style="color:var(--ardosia)">Ano de nascimento</td><td class="num">${u.anoNascimento || '—'}</td></tr>
+              <tr><td style="color:var(--ardosia)">Quarto / piso</td><td>${esc(u.quarto || '—')}</td></tr>
+              <tr><td style="color:var(--ardosia)">Nível de partida</td><td>${esc(NIVEIS[u.nivel] ? NIVEIS[u.nivel].nome : '—')}</td></tr>
+              <tr><td style="color:var(--ardosia)">Modo de desafio</td><td>${esc(MODOS_DESAFIO[modoDesafioDe(u)].nome)}${u.desafio ? '' : ' (da instituição)'}</td></tr>
+              <tr><td style="color:var(--ardosia)">Interesses</td><td>${(u.interesses||[]).length ? esc(u.interesses.join(', ')) : '—'}</td></tr>
+              <tr><td style="color:var(--ardosia)">Estado</td><td>${u.ativo === false ? '<span class="selo selo-aviso">inativo</span>' : '<span class="selo selo-ok">ativo</span>'}</td></tr>
+            </tbody></table>
+            ${u.notas ? `<div class="nota-clinica" style="margin-top:14px">${esc(u.notas)}</div>` : ''}
+          </div>
+          <div class="cartao">
+            <div class="cartao-cab"><h3>Como o utente vê o ecrã</h3></div>
+            <label class="campo"><span>Tamanho da letra</span>
+              <select onchange="Pro.pref('${u.id}','escala',parseFloat(this.value))">
+                ${[[1,'Normal'],[1.15,'Grande (recomendado)'],[1.3,'Muito grande'],[1.5,'Máximo']]
+                  .map(([v,t]) => `<option value="${v}" ${u.prefs.escala == v ? 'selected' : ''}>${t}</option>`).join('')}
+              </select></label>
+            <label class="campo"><span>Alto contraste</span>
+              <select onchange="Pro.pref('${u.id}','contraste',this.value==='1')">
+                <option value="0" ${!u.prefs.contraste ? 'selected' : ''}>Desligado</option>
+                <option value="1" ${u.prefs.contraste ? 'selected' : ''}>Ligado — para baixa visão</option>
+              </select></label>
+            <label class="campo"><span>Sons de resposta</span>
+              <select onchange="Pro.pref('${u.id}','som',this.value==='1')">
+                <option value="1" ${u.prefs.som !== false ? 'selected' : ''}>Ligados</option>
+                <option value="0" ${u.prefs.som === false ? 'selected' : ''}>Desligados</option>
+              </select></label>
+            <label class="campo"><span>Ritmo</span>
+              <select onchange="Pro.pref('${u.id}','semTempo',this.value==='1')">
+                <option value="0" ${!u.prefs.semTempo ? 'selected' : ''}>Normal</option>
+                <option value="1" ${u.prefs.semTempo ? 'selected' : ''}>Mais lento — tempos alargados em 60%</option>
+              </select></label>
+            <label class="campo"><span>Modo de desafio deste utente</span>
+              <select onchange="Pro.campo('${u.id}','desafio',this.value||null)">
+                <option value="" ${!u.desafio ? 'selected' : ''}>Seguir a instituição (${esc(MODOS_DESAFIO[S.desafio].nome)})</option>
+                ${Object.entries(MODOS_DESAFIO).map(([k,v]) => `<option value="${k}" ${u.desafio === k ? 'selected' : ''}>${esc(v.nome)} — alvo ${Math.round(v.acerto*100)}% de acerto</option>`).join('')}
+              </select>
+              <span class="dica">O modo define a taxa de acerto que o motor procura manter. Mais alta = exercícios mais fáceis.</span></label>
+          </div>
+        </div>
+        <div class="cartao" style="margin-top:14px">
+          <div class="cartao-cab"><h3>Manutenção</h3></div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn btn-secundario" onclick="Pro.recalibrar('${u.id}')">Recalibrar perfil</button>
+            <button class="btn btn-secundario" onclick="Pro.alternarAtivo('${u.id}')">${u.ativo === false ? 'Reativar utente' : 'Marcar como inativo'}</button>
+            <button class="btn btn-perigo" onclick="Pro.apagarUtente('${u.id}')">Apagar utente e histórico</button>
+          </div>
+        </div>`
+    };
+
+    return `
+    <div class="tela-cab">
+      <div>
+        <button class="btn btn-fantasma" onclick="Pro.ir('utentes')" style="margin-bottom:6px">← Utentes</button>
+        <h1>${esc(u.nome || u.iniciais)}</h1>
+        <div class="sub">${u.anoNascimento ? (new Date().getFullYear()-u.anoNascimento) + ' anos · ' : ''}${esc(NIVEIS[u.nivel] ? NIVEIS[u.nivel].nome : '')}${u.quarto ? ' · ' + esc(u.quarto) : ''}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-secundario" onclick="Relatorio.imprimir('${u.id}')">Relatório</button>
+        <button class="btn btn-primario" onclick="Sessao.preparar('${u.id}');mostrarVista('sessao')">Iniciar sessão</button>
+      </div>
+    </div>
+    <div class="abas">${abas.map(([k,t]) => `<button class="aba" aria-selected="${this.aba===k}" onclick="Pro.aba='${k}';Pro.render()">${t}</button>`).join('')}</div>
+    ${(corpo[this.aba] || corpo.geral)()}`;
+  },
+
+  /* ---------------- BIBLIOTECA DE EXERCÍCIOS ---------------- */
+  exercicios(){
+    return `
+    <div class="tela-cab">
+      <div><div class="eyebrow">Biblioteca</div><h1>Exercícios</h1>
+        <div class="sub">Nove exercícios, seis domínios. Cada um adapta-se por parâmetros próprios.</div></div>
+    </div>
+    <div class="grelha g2">
+      ${CHAVES_DOM.map(k => `<div class="cartao">
+        <div class="cartao-cab"><h3>${esc(DOMINIOS[k].nome)}</h3></div>
+        <p style="font-size:13px;color:var(--ardosia);margin:0 0 14px">${esc(DOMINIOS[k].desc)}</p>
+        ${JOGOS.filter(j => j.dominio === k).map(j => `
+          <div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--junta)">
+            <span style="font-size:26px">${j.icone}</span>
+            <div style="flex:1">
+              <div style="font-weight:700;font-size:14.5px;color:var(--cobalto-fundo)">${esc(j.nome)}</div>
+              <div style="font-size:13px;color:var(--ardosia);margin:2px 0 5px">${esc(j.resumo)}</div>
+              <div style="font-size:11.5px;color:var(--ardosia-clara)"><b>Adapta:</b> ${esc(j.adapta)}</div>
+            </div>
+            <button class="btn btn-secundario" onclick="Pro.experimentar('${j.id}')">Experimentar</button>
+          </div>`).join('')}
+      </div>`).join('')}
+    </div>`;
+  },
+
+  async experimentar(jogoId){
+    const j = jogoPorId(jogoId);
+    const r = await abrirModal(`Experimentar: ${j.nome}`, `
+      <p style="margin:0 0 16px;color:var(--ardosia);font-size:13.5px">Corre um exercício isolado, sem gravar nada. Serve para ver como o mesmo jogo muda com a dificuldade.</p>
+      <label class="campo"><span>Dificuldade</span>
+        <input type="range" min="5" max="95" value="50" data-d oninput="this.nextElementSibling.textContent=this.value">
+        <span class="dica num" style="font-size:14px;font-weight:700;color:var(--cobalto)">50</span></label>
+      <div class="nota-clinica"><b>Adapta:</b> ${esc(j.adapta)}</div>`,
+      [{ r:'nao', t:'Cancelar', c:'btn-secundario' }, { r:'sim', t:'Correr', c:'btn-primario' }]);
+    if(!r || r.r !== 'sim') return;
+    const d = +r.modal.querySelector('[data-d]').value;
+    mostrarVista('sessao');
+    limparPrefs();
+    $('#ses-quem').textContent = `Ensaio — ${j.nome} (dificuldade ${d})`;
+    $('#ses-passos').innerHTML = '';
+    $('#ses-sair').textContent = 'Voltar';
+    const P = criarPalco($('#ses-palco'), { semTempo:false });
+    try{ await j.item(d, P, {}); }catch(e){}
+    irPara('pro'); this.ir('exercicios');
+  },
+
+  /* ---------------- DEFINIÇÕES ---------------- */
+  definicoes(){
+    return `
+    <div class="tela-cab"><div><div class="eyebrow">Configuração</div><h1>Definições</h1></div></div>
+    <div class="grelha g2">
+      <div class="cartao">
+        <div class="cartao-cab"><h3>Instituição</h3></div>
+        <label class="campo"><span>Nome da instituição</span>
+          <input type="text" value="${esc(S.instituicao)}" onchange="S.instituicao=this.value.trim();gravar();Pro.render();torrada('Guardado')" placeholder="Ex.: Lar de São Bento, Vila Nova de Gaia">
+          <span class="dica">Aparece no relatório e serve de resposta certa no exercício de orientação espacial.</span></label>
+        <label class="campo"><span>Quem dinamiza habitualmente</span>
+          <input type="text" value="${esc(S.dinamizador)}" onchange="S.dinamizador=this.value.trim();gravar();torrada('Guardado')" placeholder="Nome preenchido por omissão no fim da sessão"></label>
+        <label class="campo"><span>PIN da área profissional</span>
+          <input type="text" inputmode="numeric" maxlength="4" value="${esc(S.pin)}" onchange="S.pin=this.value.replace(/\\D/g,'').padEnd(4,'0').slice(0,4);gravar();this.value=S.pin;torrada('PIN alterado')">
+          <span class="dica">Quatro dígitos. Impede que o ecrã de dados fique acessível durante uma sessão.</span></label>
+      </div>
+
+      <div class="cartao">
+        <div class="cartao-cab"><h3>Sessões</h3></div>
+        <label class="campo"><span>Modo de desafio por omissão</span>
+          <select onchange="S.desafio=this.value;gravar();Pro.render();torrada('Guardado')">
+            ${Object.entries(MODOS_DESAFIO).map(([k,v]) => `<option value="${k}" ${S.desafio===k?'selected':''}>${esc(v.nome)} — alvo ${Math.round(v.acerto*100)}% de acerto</option>`).join('')}
+          </select>
+          <span class="dica">${esc(MODOS_DESAFIO[S.desafio].desc)}</span></label>
+        <div class="linha">
+          <label class="campo"><span>Exercícios por sessão</span>
+            <select onchange="S.jogosPorSessao=+this.value;gravar();torrada('Guardado')">
+              ${[2,3,4,5,6].map(n => `<option value="${n}" ${S.jogosPorSessao===n?'selected':''}>${n} (~${n*3} min)</option>`).join('')}
+            </select></label>
+          <label class="campo"><span>Itens por exercício</span>
+            <select onchange="S.itensPorJogo=+this.value;gravar();torrada('Guardado')">
+              ${[4,5,6,8,10].map(n => `<option value="${n}" ${S.itensPorJogo===n?'selected':''}>${n}</option>`).join('')}
+            </select>
+            <span class="dica">Alguns exercícios definem um número próprio.</span></label>
+        </div>
+      </div>
+    </div>
+
+    <div class="cartao" style="margin-top:14px">
+      <div class="cartao-cab"><h3>Dados</h3><span class="selo selo-neutro">${S.utentes.length} utentes · ${S.sessoes.length} sessões</span></div>
+      <p style="font-size:13px;color:var(--ardosia);margin:0 0 14px">Tudo fica guardado <b>neste dispositivo</b> (${esc(Guardar.modo)}). Nada é enviado para a internet. Faça uma cópia de segurança com regularidade e guarde-a em local seguro, como faria com qualquer registo de utentes.</p>
+      <div style="display:flex;gap:9px;flex-wrap:wrap">
+        <button class="btn btn-primario" onclick="exportarJSON()">Descarregar cópia de segurança</button>
+        <button class="btn btn-secundario" onclick="$('#ficheiro-import').click()">Restaurar cópia</button>
+        <button class="btn btn-secundario" onclick="exportarCSV()">Exportar todas as sessões (CSV)</button>
+        <button class="btn btn-secundario" onclick="Pro.dadosDemo()">Gerar dados de demonstração</button>
+        <button class="btn btn-perigo" onclick="Pro.apagarTudo()">Apagar tudo</button>
+      </div>
+      <input type="file" id="ficheiro-import" accept="application/json" class="oculto" onchange="importarJSON(this)">
+    </div>
+
+    <div class="cartao" style="margin-top:14px">
+      <div class="cartao-cab"><h3>Proteção de dados e limites da ferramenta</h3></div>
+      <div style="font-size:13px;color:var(--ardosia);line-height:1.65">
+        <p style="margin:0 0 10px"><b>Minimização.</b> O Elos funciona só com iniciais ou um código interno. O campo do nome é opcional — se a instituição preferir, deixe-o em branco e identifique o utente por código.</p>
+        <p style="margin:0 0 10px"><b>Localização dos dados.</b> Não há servidor nem conta. Os registos ficam no armazenamento do navegador deste equipamento. Apagar os dados do navegador apaga os registos: por isso as cópias de segurança importam.</p>
+        <p style="margin:0 0 10px"><b>Consentimento.</b> Antes de registar um utente, obtenha consentimento informado do próprio ou do representante legal, conforme o procedimento da instituição.</p>
+        <p style="margin:0"><b>O que isto não é.</b> O Elos não diagnostica, não estadia demência e não substitui avaliação neuropsicológica ou parecer médico. Os índices medem desempenho nestes exercícios e servem para adaptar as sessões e sinalizar alterações à equipa.</p>
+      </div>
+    </div>`;
+  },
+
+  /* ---------------- ações ---------------- */
+  async pref(id, chave, valor){
+    const u = utentePorId(id); u.prefs[chave] = valor; await gravar(); torrada('Preferência guardada');
+  },
+  async campo(id, chave, valor){
+    const u = utentePorId(id); u[chave] = valor; await gravar(); this.render(); torrada('Guardado');
+  },
+
+  async editarUtente(id){
+    const u = id ? utentePorId(id) : null;
+    const anoAtual = new Date().getFullYear();
+    const r = await abrirModal(u ? 'Editar utente' : 'Novo utente', `
+      <div class="linha">
+        <label class="campo"><span>Nome (opcional)</span><input type="text" data-nome value="${esc(u ? u.nome : '')}" placeholder="Maria Conceição"></label>
+        <label class="campo"><span>Iniciais ou código *</span><input type="text" data-ini maxlength="6" value="${esc(u ? u.iniciais : '')}" placeholder="M.C." required></label>
+      </div>
+      <div class="linha">
+        <label class="campo"><span>Ano de nascimento</span><input type="number" data-ano min="1900" max="${anoAtual}" value="${u && u.anoNascimento ? u.anoNascimento : ''}" placeholder="1941"></label>
+        <label class="campo"><span>Quarto ou piso</span><input type="text" data-quarto value="${esc(u ? u.quarto : '')}" placeholder="Piso 2 — Q. 14"></label>
+      </div>
+      <label class="campo"><span>Nível de partida *</span>
+        <select data-nivel>
+          ${Object.entries(NIVEIS).map(([k,v]) => `<option value="${k}" ${(u ? u.nivel : 'moderado') === k ? 'selected' : ''}>${esc(v.nome)} — ${esc(v.desc)}</option>`).join('')}
+        </select>
+        <span class="dica">Define apenas o ponto de partida. Ao fim de uma ou duas sessões o motor corrige-o sozinho a partir do desempenho real.</span></label>
+      <label class="campo"><span>Interesses (separados por vírgula)</span>
+        <input type="text" data-int value="${esc(u ? (u.interesses||[]).join(', ') : '')}" placeholder="futebol, fado, jardinagem, costura">
+        <span class="dica">Ajudam a equipa a puxar conversa durante os exercícios.</span></label>
+      <label class="campo"><span>Notas da equipa</span>
+        <textarea rows="2" data-notas placeholder="Ex.: usa aparelho auditivo à direita; cansa-se depois das 16h.">${esc(u ? u.notas : '')}</textarea></label>`,
+      [{ r:'nao', t:'Cancelar', c:'btn-secundario' }, { r:'sim', t: u ? 'Guardar' : 'Criar utente', c:'btn-primario' }]);
+    if(!r || r.r !== 'sim') return;
+    const m = r.modal, v = s => m.querySelector(s).value.trim();
+    const ini = v('[data-ini]').toUpperCase();
+    const nome = v('[data-nome]');
+    if(!ini && !nome){ torrada('Indique pelo menos as iniciais'); return this.editarUtente(id); }
+    const dados = {
+      nome, iniciais: ini || nome.split(' ').map(p => p[0]).join('.').toUpperCase().slice(0,5),
+      anoNascimento: parseInt(v('[data-ano]')) || null,
+      quarto: v('[data-quarto]'), nivel: m.querySelector('[data-nivel]').value,
+      interesses: v('[data-int]').split(',').map(s => s.trim()).filter(Boolean),
+      notas: v('[data-notas]')
+    };
+    if(u){
+      const mudouNivel = u.nivel !== dados.nivel && observacoes(u) === 0;
+      Object.assign(u, dados);
+      if(mudouNivel) u.perfil = perfilInicial(NIVEIS[dados.nivel].theta);
+      await gravar(); this.render(); torrada('Utente atualizado');
+    } else {
+      const novo = novoUtente(dados);
+      novo.perfil = perfilInicial(NIVEIS[dados.nivel].theta);
+      S.utentes.push(novo); await gravar();
+      this.ir('utente', novo.id); torrada('Utente criado');
+    }
+  },
+
+  async recalibrar(id){
+    const u = utentePorId(id);
+    const ok = await confirmar('Recalibrar perfil?',
+      'Os índices dos seis domínios voltam ao valor do nível de partida e o contador de exercícios é reposto. O histórico de sessões mantém-se intacto. Use quando houver uma mudança clínica relevante.', 'Recalibrar');
+    if(!ok) return;
+    u.perfil = perfilInicial(NIVEIS[u.nivel].theta);
+    await gravar(); this.render(); torrada('Perfil recalibrado');
+  },
+  async alternarAtivo(id){
+    const u = utentePorId(id); u.ativo = u.ativo === false; await gravar(); this.render();
+    torrada(u.ativo ? 'Utente reativado' : 'Utente marcado como inativo');
+  },
+  async apagarUtente(id){
+    const u = utentePorId(id);
+    const ok = await confirmar('Apagar definitivamente?',
+      `Vai apagar ${u.nome || u.iniciais} e as ${sessoesDe(id).length} sessões associadas. Não há forma de recuperar sem uma cópia de segurança.`, 'Apagar', true);
+    if(!ok) return;
+    S.utentes = S.utentes.filter(x => x.id !== id);
+    S.sessoes = S.sessoes.filter(s => s.utenteId !== id);
+    await gravar(); this.ir('utentes'); torrada('Utente apagado');
+  },
+  async apagarTudo(){
+    const ok = await confirmar('Apagar todos os dados?',
+      `Vai apagar ${S.utentes.length} utentes e ${S.sessoes.length} sessões deste dispositivo. Descarregue primeiro uma cópia de segurança se quiser manter o histórico.`, 'Apagar tudo', true);
+    if(!ok) return;
+    S = estadoInicial(); await gravar(); this.ir('painel'); torrada('Dados apagados');
+  },
+
+  async dadosDemo(){
+    const ok = await confirmar('Gerar dados de demonstração?',
+      'Cria 6 utentes fictícios com 8 semanas de sessões simuladas, para experimentar os gráficos e os relatórios. Os dados atuais são mantidos.', 'Gerar');
+    if(!ok) return;
+    gerarDemo(); await gravar(); this.ir('utentes'); torrada('Demonstração criada');
+  }
+};
+
+/* ---------------- relatório para impressão ---------------- */
+const Relatorio = {
+  imprimir(id){
+    const u = utentePorId(id), e = estatisticasUtente(u), serie = serieIndice(u);
+    const ss = sessoesDe(id).slice().reverse().slice(0, 14);
+    $('#pro-tela').innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid var(--cobalto);padding-bottom:12px;margin-bottom:18px">
+        <div><div style="font-family:var(--f-titulo);font-weight:800;font-size:22px;color:var(--cobalto-fundo)">Relatório de estimulação cognitiva</div>
+          <div style="font-size:13px;color:var(--ardosia)">${esc(S.instituicao || '')}</div></div>
+        <div style="text-align:right;font-size:12px;color:var(--ardosia)">Emitido a ${dataLonga(new Date())}<br>Elos · dados locais</div>
+      </div>
+      <div class="grelha g2" style="margin-bottom:14px">
+        <div class="cartao"><div class="cartao-cab"><h3>Utente</h3></div>
+          <table class="tab"><tbody>
+            <tr><td style="color:var(--ardosia);width:45%">Identificação</td><td><b>${esc(u.nome || u.iniciais)}</b></td></tr>
+            <tr><td style="color:var(--ardosia)">Idade</td><td>${u.anoNascimento ? (new Date().getFullYear()-u.anoNascimento) + ' anos' : 'n/d'}</td></tr>
+            <tr><td style="color:var(--ardosia)">Nível de partida</td><td>${esc(NIVEIS[u.nivel].nome)}</td></tr>
+            <tr><td style="color:var(--ardosia)">Modo de desafio</td><td>${esc(MODOS_DESAFIO[modoDesafioDe(u)].nome)}</td></tr>
+            <tr><td style="color:var(--ardosia)">Período</td><td>${e.sessoes ? dataCurta(sessoesDe(id)[0].inicio) + ' a ' + dataCurta(e.ultima) : '—'}</td></tr>
+            <tr><td style="color:var(--ardosia)">Sessões / exercícios</td><td class="num">${e.sessoes} / ${e.itens}</td></tr>
+            <tr><td style="color:var(--ardosia)">Acerto médio</td><td class="num">${e.acerto === null ? '—' : Math.round(e.acerto*100) + '%'}</td></tr>
+          </tbody></table></div>
+        <div class="cartao"><div class="cartao-cab"><h3>Mosaico cognitivo</h3>
+          <span style="font-family:var(--f-titulo);font-weight:800;font-size:24px">${observacoes(u) ? indiceGlobal(u) : '—'}</span></div>
+          ${mosaicoHTML(u)}</div>
+      </div>
+      <div class="cartao" style="margin-bottom:14px"><div class="cartao-cab"><h3>Evolução do índice global</h3></div>${grafLinha(serie)}</div>
+      <div class="cartao" style="margin-bottom:14px"><div class="cartao-cab"><h3>Detalhe por domínio</h3></div>${barrasDominio(u)}</div>
+      ${ss.length ? `<div class="cartao" style="margin-bottom:14px"><div class="cartao-cab"><h3>Últimas sessões</h3></div>
+        <table class="tab"><thead><tr><th>Data</th><th>Duração</th><th>Acerto</th><th>Reação</th><th>Observações</th></tr></thead><tbody>
+        ${ss.map(s => { let it=0,ce=0; (s.blocos||[]).forEach(b=>b.itens.forEach(i=>{it++;if(i.ok)ce++;}));
+          const dur = Math.max(1, Math.round((new Date(s.fim||s.inicio)-new Date(s.inicio))/60000));
+          return `<tr><td class="num">${dataCurta(s.inicio)}</td><td class="num">${dur} min</td>
+            <td class="num">${it?Math.round(ce/it*100)+'%':'—'}</td>
+            <td>${({bem:'participou bem',normal:'normal',cansado:'cansado',agitado:'agitado'}[s.humor])||'—'}</td>
+            <td style="font-size:12px">${esc(s.notas||'')}</td></tr>`; }).join('')}
+        </tbody></table></div>` : ''}
+      <div class="nota-clinica">
+        <b>Nota de interpretação.</b> Os índices (0–100) resultam de um modelo logístico aplicado ao desempenho nos exercícios do Elos e representam o nível de dificuldade que o utente resolve com aproximadamente 50% de probabilidade em cada domínio. São indicadores de desempenho na atividade, com margem de erro que diminui com o número de exercícios realizados. <b>Não constituem avaliação neuropsicológica nem elemento de diagnóstico.</b> Variações devem ser lidas em conjunto com o estado clínico, a medicação, o sono e a disposição do utente nos dias das sessões.
+      </div>
+      <div style="margin-top:26px;display:flex;gap:60px;font-size:12px;color:var(--ardosia)">
+        <div style="flex:1;border-top:1px solid var(--ardosia-clara);padding-top:6px">Profissional responsável</div>
+        <div style="flex:1;border-top:1px solid var(--ardosia-clara);padding-top:6px">Data</div>
+      </div>
+      <div class="nao-imprime" style="margin-top:22px;display:flex;gap:9px">
+        <button class="btn btn-primario" onclick="window.print()">Imprimir ou guardar em PDF</button>
+        <button class="btn btn-secundario" onclick="Pro.render()">Voltar</button>
+      </div>`;
+    window.scrollTo(0, 0);
+    setTimeout(() => window.print(), 400);
+  }
+};
+
+/* ---------------- exportação ---------------- */
+function descarregar(nome, conteudo, tipo){
+  const b = new Blob([conteudo], { type: tipo });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b); a.download = nome;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000);
+}
+function exportarJSON(){
+  descarregar(`elos-copia-${new Date().toISOString().slice(0,10)}.json`, JSON.stringify(S, null, 2), 'application/json');
+  torrada('Cópia descarregada');
+}
+function importarJSON(input){
+  const f = input.files[0]; if(!f) return;
+  const r = new FileReader();
+  r.onload = async () => {
+    try{
+      const d = JSON.parse(r.result);
+      if(!d.versao || !Array.isArray(d.utentes)) throw new Error('formato');
+      const ok = await confirmar('Restaurar esta cópia?', `A cópia tem ${d.utentes.length} utentes e ${(d.sessoes||[]).length} sessões. Os dados atuais deste dispositivo serão substituídos.`, 'Restaurar', true);
+      if(!ok) return;
+      S = d; await gravar(); Pro.ir('painel'); torrada('Cópia restaurada');
+    }catch(e){ torrada('Ficheiro inválido — não é uma cópia do Elos'); }
+    input.value = '';
+  };
+  r.readAsText(f);
+}
+function exportarCSV(utenteId){
+  const linhas = [['utente','iniciais','sessao_id','data','hora','dinamizador','reacao','interrompida','exercicio','dominio','indice_antes','indice_depois','item','dificuldade','acertou','tempo_ms','notas_sessao']];
+  S.sessoes.filter(s => !utenteId || s.utenteId === utenteId).forEach(s => {
+    const u = utentePorId(s.utenteId); if(!u) return;
+    (s.blocos || []).forEach(b => b.itens.forEach((i, k) => {
+      linhas.push([u.nome||'', u.iniciais, s.id, dataCurta(s.inicio), horaCurta(s.inicio), s.dinamizador||'', s.humor||'', s.interrompida?'sim':'nao',
+        (jogoPorId(b.jogo)||{nome:b.jogo}).nome, DOMINIOS[b.dominio].nome, b.tAntes.toFixed(1), b.tDepois.toFixed(1),
+        k+1, i.d, i.ok?1:0, i.ms, (s.notas||'').replace(/[\r\n]+/g,' ')]);
+    }));
+  });
+  if(linhas.length === 1) return torrada('Ainda não há sessões para exportar');
+  const csv = '\ufeff' + linhas.map(l => l.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  descarregar(`elos-sessoes-${new Date().toISOString().slice(0,10)}.csv`, csv, 'text/csv;charset=utf-8');
+  torrada(`${linhas.length-1} registos exportados`);
+}
+</script>
+<script>
+/* =============================================================
+   ELOS — navegação e arranque
+   ============================================================= */
+'use strict';
+
+let proDesbloqueado = false;
+
+function mostrarVista(v){
+  ['entrada','pro','sessao'].forEach(x => $('#view-' + x).classList.toggle('oculto', x !== v));
+  window.scrollTo(0, 0);
+}
+function irPara(v){
+  if(v === 'entrada'){ limparPrefs(); mostrarVista('entrada'); }
+  else if(v === 'pro'){ mostrarVista('pro'); Pro.render(); }
+  else mostrarVista(v);
+}
+
+/* ---------------- PIN ---------------- */
+async function pedirPIN(){
+  if(proDesbloqueado) return true;
+  return new Promise(resolve => {
+    const fundo = document.createElement('div');
+    fundo.className = 'modal-fundo';
+    fundo.innerHTML = `<div class="modal" style="width:min(380px,100%)" role="dialog" aria-modal="true" aria-label="Introduzir PIN">
+      <div class="modal-cab"><h2>Área profissional</h2><button class="btn btn-fantasma" data-x aria-label="Fechar">✕</button></div>
+      <div class="modal-corpo">
+        <p style="margin:0 0 20px;color:var(--ardosia);font-size:13.5px;text-align:center">Introduza o PIN de quatro dígitos.</p>
+        <div class="pin-mostra" data-pontos>${[0,1,2,3].map(() => '<span class="pin-ponto"></span>').join('')}</div>
+        <div class="pin-teclado">
+          ${[1,2,3,4,5,6,7,8,9].map(n => `<button class="pin-tecla" data-n="${n}">${n}</button>`).join('')}
+          <button class="pin-tecla" data-limpar>C</button>
+          <button class="pin-tecla" data-n="0">0</button>
+          <button class="pin-tecla" data-apagar>←</button>
+        </div>
+        <p style="margin:18px 0 0;color:var(--ardosia-clara);font-size:11.5px;text-align:center" data-erro></p>
+      </div></div>`;
+    let pin = '';
+    const pintar = () => $$('.pin-ponto', fundo).forEach((p, i) => p.classList.toggle('cheio', i < pin.length));
+    fundo.addEventListener('click', async e => {
+      if(e.target.closest('[data-x]') || e.target === fundo){ fundo.remove(); return resolve(false); }
+      const t = e.target.closest('.pin-tecla'); if(!t) return;
+      if(t.hasAttribute('data-limpar')) pin = '';
+      else if(t.hasAttribute('data-apagar')) pin = pin.slice(0, -1);
+      else if(pin.length < 4) pin += t.dataset.n;
+      pintar();
+      if(pin.length === 4){
+        if(pin === S.pin){ proDesbloqueado = true; fundo.remove(); resolve(true); }
+        else{
+          $('[data-erro]', fundo).textContent = 'PIN errado. Tente outra vez.';
+          $('[data-pontos]', fundo).style.animation = 'pisca .4s 2';
+          pin = ''; setTimeout(() => { pintar(); $('[data-pontos]', fundo).style.animation = ''; }, 500);
+        }
+      }
+    });
+    document.addEventListener('keydown', function ouv(ev){
+      if(!document.body.contains(fundo)){ document.removeEventListener('keydown', ouv); return; }
+      if(/^\d$/.test(ev.key) && pin.length < 4){
+        pin += ev.key; pintar();
+        if(pin.length === 4){
+          if(pin === S.pin){ proDesbloqueado = true; fundo.remove(); resolve(true); }
+          else{ $('[data-erro]', fundo).textContent = 'PIN errado. Tente outra vez.'; pin = ''; setTimeout(pintar, 400); }
+        }
+      } else if(ev.key === 'Backspace'){ pin = pin.slice(0, -1); pintar(); }
+      else if(ev.key === 'Escape'){ fundo.remove(); document.removeEventListener('keydown', ouv); resolve(false); }
+    });
+    $('#modais').appendChild(fundo);
+  });
+}
+
+/* ---------------- dados de demonstração ----------------
+   Simula utentes com trajetórias diferentes correndo o próprio
+   motor adaptativo: as curvas que aparecem nos gráficos saem do
+   mesmo algoritmo que corre nas sessões reais.
+--------------------------------------------------------- */
+function gerarDemo(){
+  const pessoas = [
+    { nome:'Maria da Conceição Alves', ini:'M.A.', ano:1938, nivel:'ligeiro',  quarto:'Piso 1 — Q. 4',  real:68, deriva:+0.55, freq:2,   int:['fado','costura','jardinagem'] },
+    { nome:'Joaquim Silva Pereira',    ini:'J.P.', ano:1941, nivel:'moderado', quarto:'Piso 1 — Q. 9',  real:47, deriva:+0.10, freq:2,   int:['futebol','pesca'] },
+    { nome:'Amália Ferreira Costa',    ini:'A.C.', ano:1935, nivel:'avancado', quarto:'Piso 2 — Q. 12', real:31, deriva:-0.45, freq:1.5, int:['bordados','rádio'] },
+    { nome:'António Pinto Rocha',      ini:'A.R.', ano:1944, nivel:'ligeiro',  quarto:'Piso 2 — Q. 3',  real:72, deriva:+0.80, freq:2.5, int:['xadrez','jornal','vinho do Porto'] },
+    { nome:'Rosa Marques Dias',        ini:'R.D.', ano:1939, nivel:'moderado', quarto:'Piso 1 — Q. 15', real:52, deriva:+0.05, freq:2,   int:['cozinha','novelas'] },
+    { nome:'Manuel Baptista Nunes',    ini:'M.N.', ano:1932, nivel:'intenso',  quarto:'Piso 2 — Q. 7',  real:17, deriva:-0.15, freq:1,   int:['música antiga'] }
+  ];
+  const semanas = 8;
+  pessoas.forEach(p => {
+    const u = novoUtente({ nome:p.nome, iniciais:p.ini, anoNascimento:p.ano, nivel:p.nivel, quarto:p.quarto, interesses:p.int });
+    u.perfil = perfilInicial(NIVEIS[p.nivel].theta);
+    u.criadoEm = new Date(Date.now() - semanas * 7 * 86400000).toISOString();
+    /* capacidade "verdadeira" simulada, ligeiramente diferente por domínio */
+    const real = {}; CHAVES_DOM.forEach(k => real[k] = clamp(p.real + rnd(-9, 9), 5, 95));
+    const nSessoes = Math.round(semanas * p.freq);
+    for(let s = 0; s < nSessoes; s++){
+      const quando = new Date(Date.now() - (nSessoes - s) * (semanas * 7 / nSessoes) * 86400000 + rnd(-3, 3) * 3600000);
+      quando.setHours(rndI(10, 16), rndI(0, 55), 0, 0);
+      const plano = planoSessao(u);
+      const reg = { id:uid(), utenteId:u.id, inicio:quando.toISOString(), dinamizador:pick(['Inês','Cátia','Pedro','Sofia']), blocos:[], interrompida:false };
+      let dur = 0;
+      plano.forEach(pl => {
+        const j = pl.jogo, n = j.itens || 6;
+        const bloco = { jogo:j.id, dominio:j.dominio, tAntes:u.perfil[j.dominio].t, itens:[] };
+        for(let k = 0; k < n; k++){
+          const th = u.perfil[j.dominio].t;
+          const d = clamp(Motor.alvo(th, 'equilibrio'), 1, 99);
+          const ok = Math.random() < Motor.esperado(real[j.dominio], d);
+          const obs = u.perfil[j.dominio].n;
+          u.perfil[j.dominio].t = Motor.rever(th, d, ok, obs);
+          u.perfil[j.dominio].n = obs + 1;
+          bloco.itens.push({ d:Math.round(d), ok, ms:Math.round(rnd(2200, 9000)) });
+          dur += rnd(6, 18);
+        }
+        bloco.tDepois = u.perfil[j.dominio].t;
+        reg.blocos.push(bloco);
+        real[j.dominio] = clamp(real[j.dominio] + p.deriva * rnd(.4, 1.6), 4, 96);
+      });
+      reg.fim = new Date(quando.getTime() + dur * 1000 + 120000).toISOString();
+      const acerto = reg.blocos.reduce((a,b) => a + b.itens.filter(i => i.ok).length, 0) / reg.blocos.reduce((a,b) => a + b.itens.length, 0);
+      reg.humor = acerto > .75 ? 'bem' : acerto > .55 ? 'normal' : pick(['normal','cansado','agitado']);
+      if(Math.random() < .07){ reg.interrompida = true; reg.notas = 'Pediu para parar a meio; visita da família.'; }
+      else if(Math.random() < .3) reg.notas = pick([
+        'Muito participativa; reconheceu quase todos os provérbios.',
+        'Precisou de repetição da instrução nos primeiros exercícios.',
+        'Cansou-se depois do terceiro exercício.',
+        'Falou da neta durante toda a sessão. Bem-disposto.',
+        'Melhor desempenho de manhã do que à tarde.',
+        'Comentou que já não fazia contas há anos.'
+      ]);
+      S.sessoes.push(reg);
+    }
+    S.utentes.push(u);
+  });
+  if(!S.instituicao) S.instituicao = 'Lar Residencial de Vila Nova de Gaia';
+}
+
+/* ---------------- arranque ---------------- */
+(async function arrancar(){
+  await carregar();
+
+  $('#porta-sessao').addEventListener('click', () => Sessao.escolherUtente());
+  $('#porta-pro').addEventListener('click', async () => { if(await pedirPIN()) irPara('pro'); });
+
+  $$('.rail-btn[data-pane]').forEach(b => b.addEventListener('click', () => Pro.ir(b.dataset.pane)));
+  $('#pro-iniciar-sessao').addEventListener('click', () => Sessao.escolherUtente());
+  $('#pro-sair').addEventListener('click', () => { proDesbloqueado = false; irPara('entrada'); });
+
+  $('#ses-sair').addEventListener('click', async () => {
+    if(Sessao.ativa){
+      const ok = await confirmar('Terminar a sessão?',
+        'Os exercícios já feitos ficam guardados. A sessão fica assinalada como interrompida no histórico.', 'Terminar', true);
+      if(ok) abortar();
+      return;
+    }
+    abortar();
+    setTimeout(() => { limparPrefs(); irPara(proDesbloqueado ? 'pro' : 'entrada'); }, 30);
+  });
+
+  /* primeira utilização: propor a demonstração */
+  if(!S.utentes.length && !S.sessoes.length){
+    const r = await abrirModal('Bem-vindo ao Elos', `
+      <p style="margin:0 0 14px;color:var(--ardosia);font-size:14px">Esta é a primeira vez que abre o Elos neste dispositivo. Pode começar de duas maneiras:</p>
+      <ul style="margin:0 0 16px;padding-left:20px;color:var(--ardosia);font-size:13.5px;line-height:1.7">
+        <li><b>Ver a demonstração</b> — 6 utentes fictícios com 8 semanas de sessões simuladas, para perceber os gráficos e os relatórios antes de usar a sério.</li>
+        <li><b>Começar do zero</b> — registar o primeiro utente real.</li>
+      </ul>
+      <div class="nota-clinica">O PIN da área profissional começa em <b>1234</b>. Altere-o em Definições antes de usar na instituição.</div>`,
+      [{ r:'zero', t:'Começar do zero', c:'btn-secundario' }, { r:'demo', t:'Ver a demonstração', c:'btn-primario' }]);
+    if(r && r.r === 'demo'){ gerarDemo(); await gravar(); proDesbloqueado = true; return irPara('pro'); }
+  }
+
+  irPara('entrada');
+})();
+</script>
+<script>
+/* =============================================================
+   ELOS — instalação e funcionamento offline
+   ============================================================= */
+(function(){
+  'use strict';
+
+  /* --- service worker --- */
+  if('serviceWorker' in navigator && location.protocol !== 'file:'){
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        const estado = document.getElementById('estado-offline');
+        if(estado && navigator.serviceWorker.controller){
+          estado.textContent = 'Pronto a funcionar sem internet.';
+        }
+        /* nova versão disponível */
+        reg.addEventListener('updatefound', () => {
+          const novo = reg.installing;
+          if(!novo) return;
+          novo.addEventListener('statechange', () => {
+            if(novo.state === 'installed' && navigator.serviceWorker.controller){
+              mostrarAtualizacao(reg);
+            }
+          });
+        });
+      }).catch(e => console.warn('Service worker não registado:', e));
+
+      let arecarregar = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if(arecarregar) return;
+        arecarregar = true;
+        location.reload();
+      });
+    });
+  }
+
+  function mostrarAtualizacao(reg){
+    const barra = document.createElement('div');
+    barra.className = 'torrada';
+    barra.style.cursor = 'pointer';
+    barra.style.background = 'var(--verdete)';
+    barra.textContent = 'Nova versão disponível — tocar para atualizar';
+    barra.addEventListener('click', () => {
+      if(reg.waiting) reg.waiting.postMessage('atualizar');
+      barra.remove();
+    });
+    document.getElementById('torradas').appendChild(barra);
+  }
+
+  /* --- convite de instalação (Android, Chrome, Edge) --- */
+  let pedidoInstalacao = null;
+  const botao = document.getElementById('btn-instalar');
+
+  window.addEventListener('beforeinstallprompt', e => {
+    e.preventDefault();
+    pedidoInstalacao = e;
+    if(botao) botao.classList.remove('oculto');
+  });
+
+  if(botao){
+    botao.addEventListener('click', async () => {
+      if(!pedidoInstalacao) return;
+      pedidoInstalacao.prompt();
+      const escolha = await pedidoInstalacao.userChoice;
+      pedidoInstalacao = null;
+      botao.classList.add('oculto');
+      if(escolha.outcome === 'accepted' && window.torrada) torrada('Elos instalado');
+    });
+  }
+
+  window.addEventListener('appinstalled', () => {
+    if(botao) botao.classList.add('oculto');
+    if(window.torrada) torrada('Elos instalado neste dispositivo');
+  });
+
+  /* iPad e iPhone não têm beforeinstallprompt: explicar o caminho manual. */
+  const eIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const jaInstalado = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if(eIOS && !jaInstalado && botao){
+    botao.classList.remove('oculto');
+    botao.textContent = 'Como instalar no iPad';
+    botao.addEventListener('click', () => {
+      if(window.abrirModal) abrirModal('Instalar no iPad ou iPhone',
+        `<ol style="margin:0;padding-left:20px;color:var(--ardosia);font-size:14px;line-height:1.9">
+          <li>Toque no botão <b>Partilhar</b> na barra do Safari.</li>
+          <li>Escolha <b>Adicionar ao ecrã principal</b>.</li>
+          <li>Confirme em <b>Adicionar</b>.</li>
+        </ol>
+        <div class="nota-clinica" style="margin-top:16px">Tem de ser no Safari. No Chrome do iPad a opção não aparece.</div>`);
+    });
+  }
+
+  /* --- atalho do ícone: ir direto para a escolha de utente --- */
+  window.addEventListener('load', () => {
+    const acao = new URLSearchParams(location.search).get('acao');
+    if(acao === 'sessao'){
+      const tentar = () => {
+        if(window.Sessao && window.S) Sessao.escolherUtente();
+        else setTimeout(tentar, 120);
+      };
+      setTimeout(tentar, 400);
+    }
+  });
+})();
+</script>
+</body>
+</html>

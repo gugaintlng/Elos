@@ -1,0 +1,35 @@
+/* Tipografias servidas pelo próprio projeto.
+   Sem pedidos ao Google Fonts: a aplicação tem de arrancar
+   igual com e sem rede, que é o caso de uso real num lar. */
+
+/* Bricolage Grotesque — variável 200–800. Marca e títulos. */
+@font-face{
+  font-family:'Bricolage Grotesque';
+  font-style:normal;
+  font-weight:200 800;
+  font-display:swap;
+  src:url(./bricolage-wght.woff2) format('woff2-variations');
+}
+
+/* Atkinson Hyperlegible — desenhada pelo Braille Institute para
+   baixa visão. É a tipografia de tudo o que o utente vê. */
+@font-face{
+  font-family:'Atkinson Hyperlegible';
+  font-style:normal; font-weight:400; font-display:swap;
+  src:url(./atkinson-400.woff2) format('woff2');
+}
+@font-face{
+  font-family:'Atkinson Hyperlegible';
+  font-style:normal; font-weight:700; font-display:swap;
+  src:url(./atkinson-700.woff2) format('woff2');
+}
+
+/* Public Sans — interface da área profissional. */
+@font-face{ font-family:'Public Sans'; font-style:normal; font-weight:400; font-display:swap;
+  src:url(./publicsans-400.woff2) format('woff2'); }
+@font-face{ font-family:'Public Sans'; font-style:normal; font-weight:500; font-display:swap;
+  src:url(./publicsans-500.woff2) format('woff2'); }
+@font-face{ font-family:'Public Sans'; font-style:normal; font-weight:600; font-display:swap;
+  src:url(./publicsans-600.woff2) format('woff2'); }
+@font-face{ font-family:'Public Sans'; font-style:normal; font-weight:700; font-display:swap;
+  src:url(./publicsans-700.woff2) format('woff2'); }

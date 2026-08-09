@@ -486,7 +486,7 @@ table.tab tbody tr:hover{background:var(--porcelana)}
 
 <!-- ===================== ENTRADA ===================== -->
 <div id="view-entrada">
-  <div class="entrada-topo">
+  <div class="entrada-topo" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
     <div class="marca">
       <svg class="marca-selo" viewBox="0 0 40 40" aria-hidden="true">
         <rect width="40" height="40" rx="7" fill="#1B4F8C"/>
@@ -496,6 +496,7 @@ table.tab tbody tr:hover{background:var(--porcelana)}
       </svg>
       <span class="marca-nome">ELOS</span>
     </div>
+    <button class="btn btn-fantasma" id="btn-idioma" onclick="trocarIdioma()">Read in English</button>
   </div>
 
   <div class="entrada-meio">
@@ -586,7 +587,7 @@ table.tab tbody tr:hover{background:var(--porcelana)}
     </button>
     <div class="rail-fundo">
       <span id="rail-instituicao"></span><br>
-      Elos v1.0 · dados locais
+      Elos v1.1 · dados locais
     </div>
   </nav>
   <main class="tela" id="pro-tela" tabindex="-1"></main>
@@ -3302,6 +3303,166 @@ function exportarRelatorioPiloto(){
 </script>
 <script>
 /* =============================================================
+   ELOS — idioma da moldura
+   A interface de enquadramento (entrada, metodologia) existe em
+   português e inglês. O CONTEÚDO dos exercícios permanece sempre
+   em português europeu: provérbios, contas em euros e listas de
+   compras são o produto, e traduzi-los daria uma aplicação pior
+   para quem realmente a usa.
+   ============================================================= */
+'use strict';
+
+let LANG = (localStorage.getItem('elos:lang') || 'pt');
+
+const EN = {
+  eyebrow: 'Adaptive cognitive stimulation',
+  titulo: 'Everyone has their own pace.<br>The exercise adjusts to it.',
+  lead: 'Elos builds cognitive stimulation sessions that calibrate, exercise by exercise, to each resident\u2019s actual ability — and records progress for the care team to follow.',
+  p1etiq: 'For activity staff',
+  p1h: 'Start a session',
+  p1p: 'Pick a resident and begin today\u2019s exercises. Large screen, no time pressure.',
+  p2etiq: 'For the day room',
+  p2h: 'Group session',
+  p2p: 'Cast to the television and run an activity with 10 to 15 people.',
+  p3etiq: 'For the care team',
+  p3h: 'Professional area',
+  p3p: 'Residents, progress by domain, reports and settings. PIN protected.',
+  instalar: 'Install on this device',
+  rodape: 'Data is stored on this device only. Elos is a stimulation and record-keeping tool — it does not replace clinical assessment.',
+  nota: 'The interface and exercise content are in European Portuguese by design — the application is built for a Portuguese care home. This page and the Methodology section are available in English.'
+};
+
+function aplicarIdioma(){
+  const en = LANG === 'en';
+  const set = (sel, txt, html) => {
+    const el = $(sel); if(!el) return;
+    if(html) el.innerHTML = txt; else el.textContent = txt;
+  };
+  const btn = $('#btn-idioma');
+  if(btn) btn.textContent = en ? 'Ver em português' : 'Read in English';
+
+  if(!en){ location.reload(); return; }
+
+  set('#view-entrada .eyebrow', EN.eyebrow);
+  set('#view-entrada h1', EN.titulo, true);
+  set('#view-entrada p.lead', EN.lead);
+  const portas = $$('#view-entrada .porta');
+  const dados = [[EN.p1etiq, EN.p1h, EN.p1p], [EN.p2etiq, EN.p2h, EN.p2p], [EN.p3etiq, EN.p3h, EN.p3p]];
+  portas.forEach((p, i) => {
+    if(!dados[i]) return;
+    p.querySelector('.porta-etiq').textContent = dados[i][0];
+    p.querySelector('h3').textContent = dados[i][1];
+    p.querySelector('p').textContent = dados[i][2];
+  });
+  const inst = $('#btn-instalar'); if(inst) inst.textContent = EN.instalar;
+  const rod = $('#view-entrada .entrada-rodape > div:not(#estado-offline)');
+  if(rod) rod.innerHTML = esc(EN.rodape) +
+    `<div style="margin-top:8px;max-width:60ch;margin-inline:auto;opacity:.85">${esc(EN.nota)}</div>`;
+}
+
+function trocarIdioma(){
+  LANG = LANG === 'pt' ? 'en' : 'pt';
+  try{ localStorage.setItem('elos:lang', LANG); }catch(e){}
+  aplicarIdioma();
+}
+
+/* ---------- Metodologia em inglês ---------- */
+function metodologiaEN(){
+  return `
+  <div class="tela-cab">
+    <div><div class="eyebrow">Foundations</div><h1>Methodology</h1>
+      <div class="sub">What the application does, how it decides, and what it cannot claim</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secundario" onclick="trocarIdioma();Pro.render()">Ver em português</button>
+      <button class="btn btn-secundario" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <div class="cartao" style="margin-bottom:14px">
+    <div class="cartao-cab"><h3>1. How difficulty is chosen</h3></div>
+    <p style="font-size:14px;margin:0 0 12px"><b>In one sentence:</b> the application estimates each resident's ability in each domain and selects, for the next exercise, the difficulty at which they should succeed about 78% of the time — revising that estimate after every response.</p>
+    <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 12px">It is not "three correct answers raise the level". It is a one-parameter logistic model, from the same family as the Rasch models used in adaptive testing and the Elo system in chess:</p>
+    <div style="background:var(--porcelana);border:1.5px solid var(--junta);border-radius:6px;padding:14px;font-family:ui-monospace,monospace;font-size:13px;line-height:1.9;margin-bottom:12px">
+      P(correct) = 1 / (1 + 10<sup>(d − θ)/25</sup>)<br>
+      d = θ − 25 · log₁₀( p / (1 − p) )<br>
+      θ ← θ + K · (outcome − P) &nbsp;&nbsp; K = 8 + 14·e<sup>−n/8</sup>
+    </div>
+    <p style="font-size:13px;color:var(--ardosia);margin:0">θ is estimated ability in the domain, d is item difficulty, p is the target success rate of the selected mode. The step size K is large while few observations exist and stabilises with practice, so the profile converges quickly in the first sessions without oscillating afterwards.</p>
+  </div>
+
+  <div class="cartao" style="margin-bottom:14px">
+    <div class="cartao-cab"><h3>2. Domains and exercises</h3></div>
+    <table class="tab"><thead><tr><th>Domain</th><th>Function</th><th>Exercises</th></tr></thead><tbody>
+      ${[['Memory','Retaining and retrieving recent information','memoria'],
+         ['Attention','Focusing, filtering distraction, sustaining effort','atencao'],
+         ['Language','Comprehension, naming, completing expressions','linguagem'],
+         ['Executive function','Categorising, planning, switching rules','executivas'],
+         ['Calculation','Handling numbers in everyday situations','calculo'],
+         ['Orientation','Placing oneself in time, space and routine','orientacao']]
+        .map(([n,f,k]) => `<tr><td><b>${n}</b></td>
+          <td style="color:var(--ardosia);font-size:12.5px">${f}</td>
+          <td style="font-size:12.5px">${JOGOS.filter(j => j.dominio === k).length} exercises</td></tr>`).join('')}
+    </tbody></table>
+    <p style="font-size:12px;color:var(--ardosia-clara);margin:12px 0 0">The six domains correspond to areas commonly covered by widely used cognitive screening instruments (MMSE, MoCA). The correspondence is one of <i>task type</i>, not psychometric equivalence: Elos exercises are not validated items from those instruments and do not produce comparable scores.</p>
+  </div>
+
+  <div class="cartao" style="margin-bottom:14px">
+    <div class="cartao-cab"><h3>3. Session structure</h3></div>
+    <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 10px">Exercise order is not random. A session opens in the resident's most preserved domain, works the weaker ones in the middle, and closes on an intermediate domain so it ends with an experience of success.</p>
+    <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 10px"><b>Frustration brake:</b> three consecutive errors lower difficulty by 11 points and offer the resident the option to move on.</p>
+    <p style="font-size:12px;color:var(--ardosia-clara);margin:0">Both rules are motivational heuristics assumed by the author, not replicated findings. They should be treated as hypotheses to be tested in the pilot.</p>
+  </div>
+
+  <div class="cartao" style="margin-bottom:14px">
+    <div class="cartao-cab"><h3>4. Accessibility</h3></div>
+    <table class="tab"><tbody>
+      <tr><td style="width:38%;color:var(--ardosia)">Typeface</td><td>Atkinson Hyperlegible, designed by the Braille Institute for low-vision readers</td></tr>
+      <tr><td style="color:var(--ardosia)">Type size</td><td>18 px base in resident mode, adjustable to 150% per person</td></tr>
+      <tr><td style="color:var(--ardosia)">Touch targets</td><td>76 px minimum height — above guideline, for hands with tremor</td></tr>
+      <tr><td style="color:var(--ardosia)">Reading</td><td>Every prompt is spoken aloud in Portuguese; a repeat button is always available</td></tr>
+      <tr><td style="color:var(--ardosia)">Schooling</td><td>Per-resident profile adjusts how much written text the content relies on</td></tr>
+      <tr><td style="color:var(--ardosia)">Timing</td><td>No exercise requires speed to succeed; slow mode extends all timings by 60%</td></tr>
+      <tr><td style="color:var(--ardosia)">Contrast</td><td>Per-resident high contrast mode</td></tr>
+      <tr><td style="color:var(--ardosia)">Motion</td><td><code>prefers-reduced-motion</code> respected</td></tr>
+    </tbody></table>
+    <p style="font-size:12px;color:var(--ardosia-clara);margin:12px 0 0">Spoken prompts are not a convenience feature. A large share of care home residents in Portugal completed four years of schooling or fewer; an exercise that requires fluent reading excludes half the room.</p>
+  </div>
+
+  <div class="cartao" style="margin-bottom:14px">
+    <div class="cartao-cab"><h3>5. Data protection</h3></div>
+    <div style="font-size:13.5px;color:var(--ardosia);line-height:1.7">
+      <p style="margin:0 0 10px"><b>Where data lives.</b> In this device's browser storage. No server, no account, no transmission over the internet. The application makes no network requests once installed.</p>
+      <p style="margin:0 0 10px"><b>Minimisation.</b> The name field is optional. An institution may operate with initials or an internal code only.</p>
+      <p style="margin:0 0 10px"><b>Legal basis.</b> Health data is a special category under Article 9 GDPR. Processing requires explicit consent from the data subject or their legal representative, alongside institutional authorisation.</p>
+      <p style="margin:0"><b>Retention and erasure.</b> Any resident can be deleted with their complete history from their profile. Backups are files the institution controls and must safeguard like any other resident record.</p>
+    </div>
+  </div>
+
+  <div class="cartao" style="border-color:var(--ocre)">
+    <div class="cartao-cab"><h3 style="color:var(--tijolo)">6. Limits — what this tool is not</h3></div>
+    <div style="font-size:13.5px;line-height:1.75">
+      <p style="margin:0 0 10px">Elos <b>does not diagnose</b>, does not stage dementia, and does not replace neuropsychological assessment or medical opinion.</p>
+      <p style="margin:0 0 10px">The indices measure <b>performance on these exercises</b>. A rise may reflect practice on the task rather than improvement in the function the task represents — the distinction between <i>learning the task</i> and <i>transfer</i>, which cannot be separated without a control group.</p>
+      <p style="margin:0 0 10px">The margin shown (± n) shrinks with the number of observations but is an approximation, not a formal confidence interval.</p>
+      <p style="margin:0">Changes should be read alongside clinical status, medication, sleep and the resident's disposition on the day. Meaningful shifts warrant a conversation with the clinical team, not conclusions drawn from the application.</p>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;font-size:12px;color:var(--ardosia-clara)">
+    <b>Clinical review:</b> pending. This tool benefits from review by a psychologist, neuropsychologist or occupational therapist before institutional use.
+  </div>`;
+}
+
+/* substituir o painel de metodologia conforme o idioma */
+(function(){
+  const original = Pro.metodologia;
+  Pro.metodologia = function(){
+    return LANG === 'en' ? metodologiaEN() : original.call(this);
+  };
+})();
+</script>
+<script>
+/* =============================================================
    ELOS — navegação e arranque
    ============================================================= */
 'use strict';
@@ -3502,6 +3663,7 @@ function gerarDemo(){
     if(r && r.r === 'demo'){ gerarDemo(); await gravar(); proDesbloqueado = true; return irPara('pro'); }
   }
 
+  if(typeof aplicarIdioma === 'function' && LANG === 'en') aplicarIdioma();
   irPara('entrada');
 })();
 </script>

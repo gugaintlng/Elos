@@ -3303,93 +3303,753 @@ function exportarRelatorioPiloto(){
 </script>
 <script>
 /* =============================================================
-   ELOS — idioma da moldura
-   A interface de enquadramento (entrada, metodologia) existe em
-   português e inglês. O CONTEÚDO dos exercícios permanece sempre
-   em português europeu: provérbios, contas em euros e listas de
-   compras são o produto, e traduzi-los daria uma aplicação pior
-   para quem realmente a usa.
+   ELOS — tradução integral da interface
+   A tradução acontece ao nível do que é mostrado, não do código:
+   um observador percorre os nós de texto e substitui-os pelo
+   equivalente inglês. A lógica dos exercícios fica intacta —
+   as respostas continuam a ser comparadas em português por
+   dentro — e por isso não há risco de partir nada.
    ============================================================= */
 'use strict';
 
-let LANG = (localStorage.getItem('elos:lang') || 'pt');
+let LANG = 'pt';
+try{ LANG = localStorage.getItem('elos:lang') || 'pt'; }catch(e){}
 
-const EN = {
-  eyebrow: 'Adaptive cognitive stimulation',
-  titulo: 'Everyone has their own pace.<br>The exercise adjusts to it.',
-  lead: 'Elos builds cognitive stimulation sessions that calibrate, exercise by exercise, to each resident\u2019s actual ability — and records progress for the care team to follow.',
-  p1etiq: 'For activity staff',
-  p1h: 'Start a session',
-  p1p: 'Pick a resident and begin today\u2019s exercises. Large screen, no time pressure.',
-  p2etiq: 'For the day room',
-  p2h: 'Group session',
-  p2p: 'Cast to the television and run an activity with 10 to 15 people.',
-  p3etiq: 'For the care team',
-  p3h: 'Professional area',
-  p3p: 'Residents, progress by domain, reports and settings. PIN protected.',
-  instalar: 'Install on this device',
-  rodape: 'Data is stored on this device only. Elos is a stimulation and record-keeping tool — it does not replace clinical assessment.',
-  nota: 'The interface and exercise content are in European Portuguese by design — the application is built for a Portuguese care home. This page and the Methodology section are available in English.'
+/* ---------- dicionário: correspondência exata ---------- */
+const DIC = {
+/* — entrada — */
+'Estimulação cognitiva adaptativa':'Adaptive cognitive stimulation',
+'Para quem dinamiza':'For activity staff',
+'Começar uma sessão':'Start a session',
+'Escolher o utente e iniciar os exercícios do dia. Ecrã grande, sem pressa.':'Choose a resident and begin today\u2019s exercises. Large screen, no rush.',
+'Para a sala de convívio':'For the day room',
+'Sessão de grupo':'Group session',
+'Projetar na televisão e conduzir uma atividade com 10 a 15 pessoas.':'Cast to the television and run an activity with 10 to 15 people.',
+'Para a equipa':'For the care team',
+'Área profissional':'Professional area',
+'Utentes, evolução por domínio, relatórios e definições. Protegida por PIN.':'Residents, progress by domain, reports and settings. PIN protected.',
+'Instalar neste dispositivo':'Install on this device',
+'Como instalar no iPad':'How to install on iPad',
+'Pronto a funcionar sem internet.':'Ready to work without internet.',
+'Os dados ficam guardados apenas neste dispositivo. Elos é uma ferramenta de estimulação e registo — não substitui avaliação clínica.':'Data is stored on this device only. Elos is a stimulation and record-keeping tool — it does not replace clinical assessment.',
+'Read in English':'Ver em português',
+
+/* — navegação — */
+'Painel':'Dashboard','Utentes':'Residents','Exercícios':'Exercises',
+'Fichas em papel':'Paper worksheets','Métricas do piloto':'Pilot metrics',
+'Metodologia':'Methodology','Definições':'Settings',
+'Sessão individual':'Individual session','Sair':'Log out',
+'Iniciar sessão':'Start session','Iniciar agora':'Start now',
+'Elos v1.1 · dados locais':'Elos v1.1 · local data',
+'Instituição por definir':'Institution not set',
+
+/* — painel — */
+'Utentes ativos':'Active residents','Sessões hoje':'Sessions today',
+'Sessões (7 dias)':'Sessions (7 days)','Acerto (7 dias)':'Accuracy (7 days)',
+'A PRECISAR DE ATENÇÃO':'NEEDS ATTENTION',
+'MÉDIA POR DOMÍNIO NA INSTITUIÇÃO':'AVERAGE BY DOMAIN ACROSS THE INSTITUTION',
+'ÚLTIMAS SESSÕES':'RECENT SESSIONS',
+'Nada a assinalar. Todos os utentes com sessões recentes e sem descidas relevantes.':'Nothing to flag. All residents have recent sessions and no notable declines.',
+'Médias apenas sobre utentes com exercícios registados no domínio.':'Averages only over residents with recorded exercises in the domain.',
+'Ainda sem sessões. Comece pela primeira.':'No sessions yet. Start with the first one.',
+'Utente':'Resident','Data':'Date','Acerto':'Accuracy','Reação':'Response',
+'Duração':'Duration','Notas':'Notes','Ver →':'View →','Observações':'Observations',
+
+/* — domínios — */
+'Memória':'Memory','Atenção':'Attention','Linguagem':'Language',
+'Funções executivas':'Executive function','Cálculo':'Calculation','Orientação':'Orientation',
+'Executivas':'Executive',
+'Reter e recuperar informação recente.':'Retaining and retrieving recent information.',
+'Focar, filtrar distrações e manter o esforço.':'Focusing, filtering distraction and sustaining effort.',
+'Compreender, nomear e completar expressões.':'Comprehending, naming and completing expressions.',
+'Categorizar, planear e alternar entre regras.':'Categorising, planning and switching between rules.',
+'Operar com números em situações do dia a dia.':'Working with numbers in everyday situations.',
+'Situar-se no tempo, no espaço e na rotina.':'Placing oneself in time, space and routine.',
+
+/* — níveis e modos — */
+'Sem défice aparente':'No apparent impairment','Défice ligeiro':'Mild impairment',
+'Défice moderado':'Moderate impairment','Défice acentuado':'Severe impairment',
+'Autónomo na maioria das tarefas.':'Independent in most tasks.',
+'Esquecimentos frequentes, mantém rotina.':'Frequent forgetfulness, keeps routine.',
+'Precisa de apoio e de instruções simples.':'Needs support and simple instructions.',
+'Apoio permanente; sessões curtas.':'Constant support; short sessions.',
+'Conforto':'Comfort','Equilíbrio':'Balanced','Desafio':'Challenge',
+'Prioriza o sucesso. Para quem se frustra depressa.':'Prioritises success. For those who frustrate easily.',
+'Recomendado. Desafia sem desanimar.':'Recommended. Challenges without discouraging.',
+'Para utentes preservados que pedem mais.':'For well-preserved residents who want more.',
+'Não sabe ler':'Cannot read','4.ª classe ou menos':'Four years of schooling or less',
+'9.º ano ou equivalente':'Lower secondary or equivalent','Secundário ou superior':'Upper secondary or higher',
+
+/* — utentes — */
+'Novo utente':'New resident','+ Novo utente':'+ New resident','Editar':'Edit',
+'Índice global':'Overall index','Visão geral':'Overview','Evolução':'Progress',
+'Sessões':'Sessions','Perfil e preferências':'Profile and preferences',
+'MOSAICO COGNITIVO':'COGNITIVE MOSAIC','DETALHE POR DOMÍNIO':'DOMAIN DETAIL',
+'PLANO SUGERIDO PARA A PRÓXIMA SESSÃO':'SUGGESTED PLAN FOR THE NEXT SESSION',
+'Aquecimento':'Warm-up','Treino':'Training','Encerramento':'Cool-down',
+'Motivo mais denso = capacidade estimada mais alta':'Denser pattern = higher estimated ability',
+'Acerto médio':'Mean accuracy','Tempo médio':'Mean time','Relatório':'Report','Fichas':'Worksheets',
+'← Utentes':'← Residents','Sinais':'Signals','SINAIS':'SIGNALS','HISTÓRICO':'HISTORY',
+'Exportar CSV':'Export CSV','sem dados':'no data','Manutenção':'Maintenance','MANUTENÇÃO':'MAINTENANCE',
+'Recalibrar perfil':'Recalibrate profile','Marcar como inativo':'Mark as inactive',
+'Reativar utente':'Reactivate resident','Apagar utente e histórico':'Delete resident and history',
+'A ordem não é aleatória: abre no domínio mais preservado, trabalha os mais frágeis a meio e fecha num domínio intermédio.':'The order is not random: it opens on the most preserved domain, works the weaker ones in the middle, and closes on an intermediate one.',
+'Sem sessões registadas':'No sessions recorded',
+'Ainda não há ninguém registado':'No one registered yet',
+
+/* — sessão — */
+'Quem vai fazer os exercícios?':'Who will be doing the exercises?',
+'Toque no nome da pessoa.':'Tap the person\u2019s name.',
+'Nova sessão':'New session','Voltar':'Back','Terminar':'Finish','Começar':'Start',
+'Continuar':'Continue','Passar ao próximo':'Skip to next',
+'Vamos com mais calma':'Let\u2019s slow down',
+'Estes estavam difíceis. Os próximos serão mais fáceis.':'Those were hard. The next ones will be easier.',
+'Terminámos por hoje 👏':'That\u2019s all for today 👏',
+'Fechar sessão':'Close session','Já está':'Done','Confirmar':'Confirm','Cancelar':'Cancel',
+'🔊 Ouvir outra vez':'🔊 Listen again',
+'A sessão ficou para outro dia. Sem problema.':'The session can wait for another day. No problem.',
+'Registo da equipa':'Team record','Como reagiu o utente?':'How did the resident respond?',
+'😊 Participou bem':'😊 Engaged well','🙂 Normal':'🙂 Normal',
+'😐 Cansado':'😐 Tired','😕 Agitado ou recusou':'😕 Agitated or refused',
+'Quem dinamiza':'Facilitator','Guardar':'Save',
+
+/* — instruções dos exercícios — */
+'Encontre os pares iguais':'Find the matching pairs',
+'Já chega — passar à frente':'That\u2019s enough — skip ahead',
+'Veja com atenção':'Watch carefully','Agora a sua vez':'Now your turn',
+'Toque nas cores pela mesma ordem.':'Tap the colours in the same order.',
+'Memorize esta lista':'Memorise this list',
+'O que estava na lista?':'What was on the list?',
+'Toque em todas as que se lembra. Depois toque em Confirmar.':'Tap everything you remember. Then tap Confirm.',
+'Toque só no verde':'Tap only on green',
+'Como acaba este ditado?':'How does this saying end?',
+'Faça a conta':'Work it out','Onde arruma':'Where does this go',
+'Escolha o grupo certo.':'Choose the right group.',
+'Veja onde estão…':'See where they are…',
+
+/* — dias e meses — */
+'domingo':'Sunday','segunda-feira':'Monday','terça-feira':'Tuesday','quarta-feira':'Wednesday',
+'quinta-feira':'Thursday','sexta-feira':'Friday','sábado':'Saturday',
+'Domingo':'Sunday','Segunda-feira':'Monday','Terça-feira':'Tuesday','Quarta-feira':'Wednesday',
+'Quinta-feira':'Thursday','Sexta-feira':'Friday','Sábado':'Saturday',
+'janeiro':'January','fevereiro':'February','março':'March','abril':'April','maio':'May',
+'junho':'June','julho':'July','agosto':'August','setembro':'September','outubro':'October',
+'novembro':'November','dezembro':'December',
+'Janeiro':'January','Fevereiro':'February','Março':'March','Abril':'April','Maio':'May',
+'Junho':'June','Julho':'July','Agosto':'August','Setembro':'September','Outubro':'October',
+'Novembro':'November','Dezembro':'December',
+'Manhã':'Morning','Tarde':'Afternoon','Noite':'Evening',
+'Primavera':'Spring','Verão':'Summer','Outono':'Autumn','Inverno':'Winter',
+
+/* — orientação — */
+'Estamos de manhã, de tarde ou de noite?':'Is it morning, afternoon or evening?',
+'Em que estação do ano estamos?':'What season are we in?',
+'Que dia da semana é hoje?':'What day of the week is it today?',
+'Em que mês estamos?':'What month are we in?',
+'Onde estamos agora?':'Where are we now?',
+'Em que ano estamos?':'What year is it?',
+'Em que dia do mês estamos?':'What day of the month is it?',
+'Que dia da semana é amanhã?':'What day of the week is tomorrow?',
+'Quantos dias faltam para acabar o mês?':'How many days until the end of the month?',
+'Numa escola':'At a school','No hospital':'At the hospital','Em casa':'At home',
+
+/* — categorias — */
+'Fruta':'Fruit','Animal':'Animal','Comida':'Food','Roupa':'Clothing',
+'Voa':'Flies','Nada':'Swims','Anda':'Walks',
+'Cozinha':'Kitchen','Quarto':'Bedroom','Casa de banho':'Bathroom',
+'Profissão':'Occupation','Lugar':'Place','Ferramenta':'Tool',
+'Ver-se':'Seen','Ouvir-se':'Heard','Cheirar-se':'Smelled',
+'Instrumento':'Instrument','Transporte':'Transport','Mobília':'Furniture','Vestuário':'Garment',
+'🍎 Maçã':'🍎 Apple','🍐 Pera':'🍐 Pear','🍇 Uvas':'🍇 Grapes','🍊 Laranja':'🍊 Orange',
+'🐕 Cão':'🐕 Dog','🐈 Gato':'🐈 Cat','🐟 Peixe':'🐟 Fish','🐔 Galinha':'🐔 Hen',
+'Pão':'Bread','Sopa':'Soup','Queijo':'Cheese','Arroz':'Rice',
+'Camisa':'Shirt','Meias':'Socks','Casaco':'Coat','Sapatos':'Shoes',
+'Andorinha':'Swallow','Avião':'Aeroplane','Abelha':'Bee','Sardinha':'Sardine',
+'Barco':'Boat','Golfinho':'Dolphin','Cavalo':'Horse','Comboio':'Train','Tartaruga':'Tortoise',
+'Frigorífico':'Fridge','Panela':'Saucepan','Fogão':'Stove','Almofada':'Pillow',
+'Lençol':'Bedsheet','Roupeiro':'Wardrobe','Toalha':'Towel','Sabonete':'Soap',
+'Escova de dentes':'Toothbrush','Padeiro':'Baker','Enfermeira':'Nurse','Pescador':'Fisherman',
+'Mercado':'Market','Igreja':'Church','Estação':'Station','Martelo':'Hammer',
+'Agulha':'Needle','Serrote':'Handsaw','Arco-íris':'Rainbow','Relâmpago':'Lightning',
+'Sombra':'Shadow','Trovão':'Thunder','Assobio':'Whistle','Sino':'Bell',
+'Café':'Coffee','Alecrim':'Rosemary','Maresia':'Sea air','Guitarra':'Guitar',
+'Acordeão':'Accordion','Tambor':'Drum','Autocarro':'Bus','Bicicleta':'Bicycle',
+'Elétrico':'Tram','Cadeira':'Chair','Mesa':'Table','Cómoda':'Chest of drawers',
+'Gravata':'Tie','Cinto':'Belt','Chapéu':'Hat',
+
+/* — lista de compras — */
+'pão':'bread','leite':'milk','ovos':'eggs','arroz':'rice','azeite':'olive oil',
+'batatas':'potatoes','cebola':'onion','alho':'garlic','bacalhau':'salt cod',
+'laranjas':'oranges','maçãs':'apples','café':'coffee','açúcar':'sugar','sal':'salt',
+'manteiga':'butter','queijo':'cheese','fiambre':'ham','tomate':'tomato',
+'sardinhas':'sardines','massa':'pasta','feijão':'beans','farinha':'flour',
+'iogurte':'yoghurt','sabão':'soap','jornal':'newspaper','vinho':'wine','água':'water',
+'bolachas':'biscuits','cenouras':'carrots','couve':'cabbage','peixe':'fish',
+'frango':'chicken','mel':'honey','canela':'cinnamon','arroz doce':'rice pudding',
+'marmelada':'quince jam','bolo':'cake','fruta':'fruit',
+
+/* — nomes dos exercícios — */
+'Pares de Memória':'Memory Pairs','Sequência de Cores':'Colour Sequence',
+'Lista de Compras':'Shopping List','Encontrar Iguais':'Find the Matches',
+'Sinal Certo':'Right Signal','Provérbios':'Proverbs','Arrumar por Grupos':'Sort into Groups',
+'Contas do Dia a Dia':'Everyday Sums','Aqui e Agora':'Here and Now',
+'Virar azulejos e encontrar os pares iguais.':'Turn tiles over and find the matching pairs.',
+'Ver uma sequência de cores acender e repeti-la pela mesma ordem.':'Watch a sequence of colours light up and repeat it in order.',
+'Memorizar uma lista de compras e depois reconhecê-la entre outras palavras.':'Memorise a shopping list, then pick it out from other words.',
+'Encontrar todas as figuras iguais ao modelo, no meio de outras parecidas.':'Find every figure matching the model among similar ones.',
+'Tocar quando aparece o sinal certo — e conter-se quando não é.':'Tap when the right signal appears — and hold back when it isn\u2019t.',
+'Completar provérbios portugueses escolhendo o final certo.':'Complete Portuguese proverbs by choosing the right ending.',
+'Decidir a que grupo pertence cada palavra.':'Decide which group each word belongs to.',
+'Resolver situações de compras e trocos em euros.':'Solve shopping and change situations in euros.',
+'Responder sobre o dia, o mês, a estação e o sítio onde estamos.':'Answer about the day, month, season and where we are.',
+'Experimentar':'Try it','Adapta:':'Adapts:','Biblioteca':'Library',
+
+/* — modo grupo — */
+'Marcar todos':'Select all','Participantes':'Participants',
+'Número de exercícios':'Number of exercises','Mostrar resposta':'Show answer',
+'Acertaram':'They got it','Não acertaram':'They missed it','🔊 Repetir':'🔊 Repeat',
+'Esconder e perguntar':'Hide and ask','Ouçam com atenção':'Listen carefully',
+'Quais eram as palavras?':'What were the words?','Eram estas':'Here they were',
+'Muito bem a todos!':'Well done everyone!','respostas certas':'correct answers',
+'de acerto':'accuracy','minutos':'minutes','participantes':'participants',
+'A que grupo pertence?':'Which group does it belong to?','Quanto é?':'How much is it?',
+'Repitam em voz alta, pela mesma ordem':'Repeat aloud, in the same order',
+
+/* — fichas — */
+'Papel':'Paper','Gerar':'Generate','Imprimir':'Print',
+'Provérbios para completar':'Proverbs to complete','Contas do dia a dia':'Everyday sums',
+'Arrumar por grupos':'Sort into groups','Aqui e agora':'Here and now',
+'Lista de compras — memória':'Shopping list — memory','Encontrar iguais':'Find the matches',
+'Nome:':'Name:','Data:':'Date:','Acompanhado por:':'Supported by:',
+'dobre aqui':'fold here','O que se lembra?':'What do you remember?','Lista':'List',
+'Tipos de ficha':'Worksheet types','Exercícios por ficha':'Exercises per sheet',
+'Grupos':'Groups','Contas':'Sums',
+
+/* — piloto — */
+'Avaliação':'Evaluation','Sessões realizadas':'Sessions held',
+'Taxa de conclusão':'Completion rate','Sessões por utente':'Sessions per resident',
+'Exercícios feitos':'Exercises completed','Acerto global':'Overall accuracy',
+'Duração média':'Mean duration','Tempo de resposta':'Response time',
+'ADESÃO SEMANA A SEMANA':'WEEK-BY-WEEK ADHERENCE',
+'CALIBRAÇÃO DO MOTOR':'ENGINE CALIBRATION',
+'VARIAÇÃO DO ÍNDICE GLOBAL':'CHANGE IN OVERALL INDEX',
+'Exportar relatório':'Export report','Modo':'Mode','Alvo':'Target',
+'Observado':'Observed','Desvio':'Deviation','Itens':'Items',
+'com pelo menos uma sessão':'with at least one session','média no período':'average for the period',
+'por sessão':'per session','média por item':'average per item',
+
+/* — definições — */
+'Configuração':'Configuration','Instituição':'Institution',
+'Nome da instituição':'Institution name','PIN da área profissional':'Professional area PIN',
+'Modo de desafio por omissão':'Default challenge mode',
+'Exercícios por sessão':'Exercises per session','Itens por exercício':'Items per exercise',
+'Dados':'Data','Descarregar cópia de segurança':'Download backup',
+'Restaurar cópia':'Restore backup','Exportar todas as sessões (CSV)':'Export all sessions (CSV)',
+'Gerar dados de demonstração':'Generate demo data','Apagar tudo':'Delete everything',
+'Tamanho da letra':'Text size','Alto contraste':'High contrast',
+'Sons de resposta':'Feedback sounds','Enunciados falados':'Spoken prompts',
+'Ritmo':'Pace','Normal':'Normal','Ligado':'On','Desligado':'Off',
+'Ligados':'On','Desligados':'Off','Grande (recomendado)':'Large (recommended)',
+'Muito grande':'Very large','Máximo':'Maximum',
+'Como o utente vê o ecrã':'How the resident sees the screen',
+'Nome (opcional)':'Name (optional)','Iniciais ou código *':'Initials or code *',
+'Ano de nascimento':'Year of birth','Quarto ou piso':'Room or floor',
+'Nível de partida *':'Starting level *','Escolaridade *':'Schooling *',
+'Escolaridade':'Schooling','Nível de partida':'Starting level',
+'Interesses (separados por vírgula)':'Interests (comma separated)',
+'Notas da equipa':'Team notes','Interesses':'Interests','Estado':'Status',
+'ativo':'active','inativo':'inactive','Criar utente':'Create resident',
+'Iniciais / código':'Initials / code','Quarto / piso':'Room / floor',
+'Modo de desafio':'Challenge mode','O seu nome':'Your name'
 };
 
-function aplicarIdioma(){
-  const en = LANG === 'en';
-  const set = (sel, txt, html) => {
-    const el = $(sel); if(!el) return;
-    if(html) el.innerHTML = txt; else el.textContent = txt;
-  };
-  const btn = $('#btn-idioma');
-  if(btn) btn.textContent = en ? 'Ver em português' : 'Read in English';
+/* ---------- padrões para texto dinâmico ---------- */
+const ITENS = { 'pão':'bread','café':'coffee','leite':'milk','jornal':'newspaper',
+  'bolo':'cake','sopa':'soup','fruta':'fruit','queijo':'cheese' };
+const it = w => ITENS[w] || w;
 
-  if(!en){ location.reload(); return; }
+const PADROES = [
+  [/^(\d+) de (\d+) pares · (\d+) tentativas$/, (m,a,b,c) => `${a} of ${b} pairs · ${c} attempts`],
+  [/^Exercício (\d+) de (\d+)$/, (m,a,b) => `Exercise ${a} of ${b}`],
+  [/^Começar — (\d+) de (\d+)$/, (m,a,b) => `Start — ${a} of ${b}`],
+  [/^Começar exercício (\d+) de (\d+)$/, (m,a,b) => `Start exercise ${a} of ${b}`],
+  [/^Pergunta (\d+) de (\d+)(.*)$/, (m,a,b,c) => `Question ${a} of ${b}${c}`],
+  [/^São (\d+) pares\. Não há tempo a contar\.$/, (m,a) => `${a} pairs. There is no clock running.`],
+  [/^Vão acender (\d+) cores\. Depois repita pela mesma ordem\.$/, (m,a) => `${a} colours will light up. Then repeat them in order.`],
+  [/^Vai ao mercado comprar (\d+) (coisa|coisas)\.$/, (m,a) => `You are going shopping for ${a} ${a==='1'?'thing':'things'}.`],
+  [/^Há (\d+) iguais a este\. Toque em cada um\. Sem pressa\.$/, (m,a) => `There are ${a} like this one. Tap each of them. No rush.`],
+  [/^Vão aparecer (\d+) círculos\. Toque quando for verde\. Se for vermelho, não toque\.$/, (m,a) => `${a} circles will appear. Tap when it is green. If it is red, do not tap.`],
+  [/^Olá, (.+)$/, (m,a) => `Hello, ${a}`],
+  [/^Hoje temos (\d+) exercícios\. Leva à volta de (\d+) minutos e pode parar quando quiser\.$/, (m,a,b) => `Today we have ${a} exercises. It takes about ${b} minutes and you can stop whenever you like.`],
+  [/^Preparámos (\d+) exercícios para hoje.*$/, (m,a) => `We have ${a} exercises ready for today.`],
+  [/^Modo (.+)$/, (m,a) => `Mode: ${DIC[a] || a}`],
+  [/^(\d+) de (\d+) certos$/, (m,a,b) => `${a} of ${b} correct`],
+  [/^(\d+) de (\d+) exercícios certos, em (\d+) minutos?\. Obrigado(.*)!$/, (m,a,b,c,d) => `${a} of ${b} exercises correct, in ${c} minute${c==='1'?'':'s'}. Thank you${d}!`],
+  [/^Sessão de grupo · (\d+) participantes$/, (m,a) => `Group session · ${a} participants`],
+  [/^(\d+) sessõe?s?( · última (.+))?$/, (m,a,_,d) => `${a} session${a==='1'?'':'s'}${d?` · last ${d}`:''}`],
+  [/^(\d+) exercícios registados · (.+)$/, (m,a,b) => `${a} exercises recorded · ${DIC[b] || b}`],
+  [/^(\d+) anos$/, (m,a) => `${a} years old`],
+  [/^Semana (\d+)$/, (m,a) => `Week ${a}`],
+  [/^(\d+) sess\. · (\d+) ut\.$/, (m,a,b) => `${a} sess. · ${b} res.`],
+  [/^Dificuldade de partida: (\d+)\/100$/, (m,a) => `Starting difficulty: ${a}/100`],
+  [/^Começar pelo domínio mais preservado, para entrar com confiança\.$/, () => 'Open on the most preserved domain, to begin with confidence.'],
+  [/^(.+) é dos domínios com maior margem de progresso\.$/, (m,a) => `${DIC[a] || a} is among the domains with most room to improve.`],
+  [/^Fechar num domínio intermédio, para terminar com sucesso\.$/, () => 'Close on an intermediate domain, to finish successfully.'],
+  [/^Sem sessão há (\d+) dias$/, (m,a) => `No session for ${a} days`],
+  [/^Descida de (\d+) pontos no índice.*$/, (m,a) => `Drop of ${a} points in the index — worth raising with the clinical team`],
+  [/^Subida de (\d+) pontos no índice$/, (m,a) => `Rise of ${a} points in the index`],
+  [/^(\d+) sessões interrompidas — rever duração ou horário$/, (m,a) => `${a} interrupted sessions — review duration or timing`],
+  [/^Ainda sem sessões registadas$/, () => 'No sessions recorded yet'],
+  [/^Taxa de acerto baixa — considerar o modo Conforto$/, () => 'Low accuracy — consider Comfort mode'],
+  /* contas */
+  [/^Comprou um (\S+) por (\d+) € e outro por (\d+) €\.$/, (m,a,b,c) => `You bought one ${it(a)} for €${b} and another for €${c}.`],
+  [/^Quanto gastou ao todo\?$/, () => 'How much did you spend in total?'],
+  [/^A conta era de (\d+) € e pagou (\d+) € agora\.$/, (m,a,b) => `The bill was €${a} and you have paid €${b} so far.`],
+  [/^Quanto falta pagar\?$/, () => 'How much is left to pay?'],
+  [/^Cada (\S+) custa (\d+) €\.$/, (m,a,b) => `Each ${it(a)} costs €${b}.`],
+  [/^Quanto custam (\d+)\?$/, (m,a) => `How much do ${a} cost?`],
+  [/^Gastou (\d+) € e pagou com uma nota de (\d+) €\.$/, (m,a,b) => `You spent €${a} and paid with a €${b} note.`],
+  [/^Quanto recebe de troco\?$/, () => 'How much change do you get?'],
+  [/^Um (\S+) custa (.+) e um (\S+) custa (.+)\.$/, (m,a,b,c,d) => `One ${it(a)} costs ${b} and one ${it(c)} costs ${d}.`],
+  [/^Quanto é a conta\?$/, () => 'What is the total?'],
+  [/^Levou (\d+) pacotes de leite a (.+) cada\.$/, (m,a,b) => `You took ${a} cartons of milk at ${b} each.`],
+  [/^Quanto pagou\?$/, () => 'How much did you pay?'],
+  [/^Levou (\d+) (\S+)s a (.+) cada e pagou com (\d+) €\.$/, (m,a,b,c,d) => `You took ${a} ${it(b)}s at ${c} each and paid with €${d}.`],
+  /* retorno */
+  [/^✓ (.+)$/, (m,a) => `✓ ${DIC[a] || a}`],
+  [/^→ (.+)$/, (m,a) => `→ ${DIC[a] || a}`],
+  [/^Acertou (\d+) de (\d+)(.*)\.$/, (m,a,b,c) => `You got ${a} of ${b}${c}.`],
+  [/^Encontrou (\d+) de (\d+)(.*)\.$/, (m,a,b,c) => `You found ${a} of ${b}${c}.`],
+  [/^Hoje é (.+)\.$/, (m,a) => `Today is ${a}.`],
+  [/^A resposta era (.+)\.$/, (m,a) => `The answer was ${a}.`],
+  [/^A sequência era de (\d+) cores\. Vamos tentar outra\.$/, (m,a) => `The sequence had ${a} colours. Let\u2019s try another.`],
+  [/^A resposta certa é: (.+)$/, (m,a) => `The correct answer is: ${a}`],
+  [/^(\d+) exercícios$/, (m,a) => `${a} exercises`],
+  [/^(\d+) exercícios? registados?$/, (m,a) => `${a} exercises recorded`],
+  [/^(\d+) utentes · (\d+) sessões$/, (m,a,b) => `${a} residents · ${b} sessions`],
+  [/^(\d+) de (\d+) pares$/, (m,a,b) => `${a} of ${b} pairs`],
+  [/^(\d+) pares$/, (m,a) => `${a} pairs`],
+  [/^(\d+) min$/, (m,a) => `${a} min`],
+  [/^(\d+) minutos?$/, (m,a) => `${a} minute${a==='1'?'':'s'}`],
+  [/^Piso (\d+) — Q\. (\d+)$/, (m,a,b) => `Floor ${a} — Rm ${b}`],
+  [/^idade n\/d$/, () => 'age n/a'],
+  [/^Mosaico cognitivo$/, () => 'Cognitive mosaic'],
+  [/^Detalhe por domínio$/, () => 'Domain detail'],
+  [/^Últimas sessões$/, () => 'Recent sessions'],
+  [/^A precisar de atenção$/, () => 'Needs attention'],
+  [/^Média por domínio na instituição$/, () => 'Average by domain across the institution'],
+  [/^Plano sugerido para a próxima sessão$/, () => 'Suggested plan for the next session'],
+  [/^Histórico$/, () => 'History'],
+  [/^Adesão semana a semana$/, () => 'Week-by-week adherence'],
+  [/^Calibração do motor$/, () => 'Engine calibration'],
+  [/^Variação do índice global$/, () => 'Change in overall index'],
+  [/^Índice global ao longo do tempo$/, () => 'Overall index over time'],
+  [/^(.+) — ficha gerada automaticamente.*$/, () => 'Worksheet generated automatically at the resident\u2019s estimated level.'],
+  [/^Sessões$/, () => 'Sessions'],
+  [/^(\d+) participantes$/, (m,a) => `${a} participants`],
+  [/^(\d+) ficha(s?) · (.+)$/, (m,a,b,c) => `${a} worksheet${a==='1'?'':'s'} · ${c}`],
+  [/^Gerar fichas ao nível (\d+) →$/, (m,a) => `Generate worksheets at level ${a} →`],
+  [/^Gerar fichas ao nível de partida →$/, () => 'Generate worksheets at starting level →'],
+  [/^Modo (.+) · pode parar quando quiser$/, (m,a) => `${DIC[a] || a} mode · you can stop at any time`]
+];
 
-  set('#view-entrada .eyebrow', EN.eyebrow);
-  set('#view-entrada h1', EN.titulo, true);
-  set('#view-entrada p.lead', EN.lead);
-  const portas = $$('#view-entrada .porta');
-  const dados = [[EN.p1etiq, EN.p1h, EN.p1p], [EN.p2etiq, EN.p2h, EN.p2p], [EN.p3etiq, EN.p3h, EN.p3p]];
-  portas.forEach((p, i) => {
-    if(!dados[i]) return;
-    p.querySelector('.porta-etiq').textContent = dados[i][0];
-    p.querySelector('h3').textContent = dados[i][1];
-    p.querySelector('p').textContent = dados[i][2];
+const ELOGIOS_EN = { 'Muito bem!':'Very good!','Boa!':'Nice!','Certo!':'Correct!',
+  'Exatamente!':'Exactly!','É isso mesmo!':'That\u2019s it!','Perfeito!':'Perfect!',
+  'Quase. Vamos ao próximo.':'Almost. On to the next one.',
+  'Não faz mal. Continuamos.':'No matter. Let\u2019s carry on.',
+  'Era outra. Seguimos.':'It was another one. Moving on.',
+  'Fica para a próxima.':'Next time.' };
+Object.assign(DIC, ELOGIOS_EN);
+
+
+/* — provérbios: equivalentes ingleses, não tradução literal — */
+Object.assign(DIC, {
+"Cão que ladra":"Barking dogs",
+"não morde":"seldom bite",
+"«Cão que ladra…»":"«Barking dogs…»",
+"…não morde":"…seldom bite",
+"«Cão que ladra, não morde.»":"«Barking dogs, seldom bite.»",
+"Mais vale um pássaro na mão":"A bird in the hand",
+"do que dois a voar":"is worth two in the bush",
+"«Mais vale um pássaro na mão…»":"«A bird in the hand…»",
+"…do que dois a voar":"…is worth two in the bush",
+"«Mais vale um pássaro na mão, do que dois a voar.»":"«A bird in the hand, is worth two in the bush.»",
+"Água mole em pedra dura":"Constant dripping",
+"tanto bate até que fura":"wears away the stone",
+"«Água mole em pedra dura…»":"«Constant dripping…»",
+"…tanto bate até que fura":"…wears away the stone",
+"«Água mole em pedra dura, tanto bate até que fura.»":"«Constant dripping, wears away the stone.»",
+"Quem não tem cão":"If you have no dog",
+"caça com gato":"hunt with a cat",
+"«Quem não tem cão…»":"«If you have no dog…»",
+"…caça com gato":"…hunt with a cat",
+"«Quem não tem cão, caça com gato.»":"«If you have no dog, hunt with a cat.»",
+"Onde há fumo":"Where there is smoke",
+"há fogo":"there is fire",
+"«Onde há fumo…»":"«Where there is smoke…»",
+"…há fogo":"…there is fire",
+"«Onde há fumo, há fogo.»":"«Where there is smoke, there is fire.»",
+"Quem semeia ventos":"Sow the wind",
+"colhe tempestades":"reap the whirlwind",
+"«Quem semeia ventos…»":"«Sow the wind…»",
+"…colhe tempestades":"…reap the whirlwind",
+"«Quem semeia ventos, colhe tempestades.»":"«Sow the wind, reap the whirlwind.»",
+"Depois da tempestade":"After the storm",
+"vem a bonança":"comes the calm",
+"«Depois da tempestade…»":"«After the storm…»",
+"…vem a bonança":"…comes the calm",
+"«Depois da tempestade, vem a bonança.»":"«After the storm, comes the calm.»",
+"Quem tudo quer":"Grasp at everything",
+"tudo perde":"and lose everything",
+"«Quem tudo quer…»":"«Grasp at everything…»",
+"…tudo perde":"…and lose everything",
+"«Quem tudo quer, tudo perde.»":"«Grasp at everything, and lose everything.»",
+"De pequenino se torce":"Bend the twig",
+"o pepino":"while it is young",
+"«De pequenino se torce…»":"«Bend the twig…»",
+"…o pepino":"…while it is young",
+"«De pequenino se torce, o pepino.»":"«Bend the twig, while it is young.»",
+"Uma andorinha":"One swallow",
+"não faz a Primavera":"does not make a summer",
+"«Uma andorinha…»":"«One swallow…»",
+"…não faz a Primavera":"…does not make a summer",
+"«Uma andorinha, não faz a Primavera.»":"«One swallow, does not make a summer.»",
+"Quem espera":"Good things come",
+"sempre alcança":"to those who wait",
+"«Quem espera…»":"«Good things come…»",
+"…sempre alcança":"…to those who wait",
+"«Quem espera, sempre alcança.»":"«Good things come, to those who wait.»",
+"Mais vale tarde":"Better late",
+"do que nunca":"than never",
+"«Mais vale tarde…»":"«Better late…»",
+"…do que nunca":"…than never",
+"«Mais vale tarde, do que nunca.»":"«Better late, than never.»",
+"A união":"Unity",
+"faz a força":"is strength",
+"«A união…»":"«Unity…»",
+"…faz a força":"…is strength",
+"«A união, faz a força.»":"«Unity, is strength.»",
+"Filho de peixe":"Like father",
+"sabe nadar":"like son",
+"«Filho de peixe…»":"«Like father…»",
+"…sabe nadar":"…like son",
+"«Filho de peixe, sabe nadar.»":"«Like father, like son.»",
+"Quem canta":"Sing your troubles",
+"seus males espanta":"away",
+"«Quem canta…»":"«Sing your troubles…»",
+"…seus males espanta":"…away",
+"«Quem canta, seus males espanta.»":"«Sing your troubles, away.»",
+"Não deixes para amanhã":"Never put off till tomorrow",
+"o que podes fazer hoje":"what you can do today",
+"«Não deixes para amanhã…»":"«Never put off till tomorrow…»",
+"…o que podes fazer hoje":"…what you can do today",
+"«Não deixes para amanhã, o que podes fazer hoje.»":"«Never put off till tomorrow, what you can do today.»",
+"Devagar":"Slow and steady",
+"se vai ao longe":"wins the race",
+"«Devagar…»":"«Slow and steady…»",
+"…se vai ao longe":"…wins the race",
+"«Devagar, se vai ao longe.»":"«Slow and steady, wins the race.»",
+"Quem tem boca":"He who has a tongue",
+"vai a Roma":"can find his way",
+"«Quem tem boca…»":"«He who has a tongue…»",
+"…vai a Roma":"…can find his way",
+"«Quem tem boca, vai a Roma.»":"«He who has a tongue, can find his way.»",
+"O hábito não faz":"The cowl does not make",
+"o monge":"the monk",
+"«O hábito não faz…»":"«The cowl does not make…»",
+"…o monge":"…the monk",
+"«O hábito não faz, o monge.»":"«The cowl does not make, the monk.»",
+"Casa roubada":"Locking the stable",
+"trancas à porta":"after the horse has bolted",
+"«Casa roubada…»":"«Locking the stable…»",
+"…trancas à porta":"…after the horse has bolted",
+"«Casa roubada, trancas à porta.»":"«Locking the stable, after the horse has bolted.»",
+"Em terra de cegos":"In the land of the blind",
+"quem tem um olho é rei":"the one-eyed man is king",
+"«Em terra de cegos…»":"«In the land of the blind…»",
+"…quem tem um olho é rei":"…the one-eyed man is king",
+"«Em terra de cegos, quem tem um olho é rei.»":"«In the land of the blind, the one-eyed man is king.»",
+"Gato escaldado":"Once bitten",
+"de água fria tem medo":"twice shy",
+"«Gato escaldado…»":"«Once bitten…»",
+"…de água fria tem medo":"…twice shy",
+"«Gato escaldado, de água fria tem medo.»":"«Once bitten, twice shy.»",
+"A cavalo dado":"Do not look a gift horse",
+"não se olha o dente":"in the mouth",
+"«A cavalo dado…»":"«Do not look a gift horse…»",
+"…não se olha o dente":"…in the mouth",
+"«A cavalo dado, não se olha o dente.»":"«Do not look a gift horse, in the mouth.»",
+"Cada macaco":"Every monkey",
+"no seu galho":"on its own branch",
+"«Cada macaco…»":"«Every monkey…»",
+"…no seu galho":"…on its own branch",
+"«Cada macaco, no seu galho.»":"«Every monkey, on its own branch.»",
+"Grão a grão":"Grain by grain",
+"enche a galinha o papo":"the hen fills her crop",
+"«Grão a grão…»":"«Grain by grain…»",
+"…enche a galinha o papo":"…the hen fills her crop",
+"«Grão a grão, enche a galinha o papo.»":"«Grain by grain, the hen fills her crop.»",
+"Quem não arrisca":"Nothing ventured",
+"não petisca":"nothing gained",
+"«Quem não arrisca…»":"«Nothing ventured…»",
+"…não petisca":"…nothing gained",
+"«Quem não arrisca, não petisca.»":"«Nothing ventured, nothing gained.»",
+"Deitar cedo e cedo erguer":"Early to bed and early to rise",
+"dá saúde e faz crescer":"makes a man healthy and wise",
+"«Deitar cedo e cedo erguer…»":"«Early to bed and early to rise…»",
+"…dá saúde e faz crescer":"…makes a man healthy and wise",
+"«Deitar cedo e cedo erguer, dá saúde e faz crescer.»":"«Early to bed and early to rise, makes a man healthy and wise.»",
+"As paredes":"Walls",
+"têm ouvidos":"have ears",
+"«As paredes…»":"«Walls…»",
+"…têm ouvidos":"…have ears",
+"«As paredes, têm ouvidos.»":"«Walls, have ears.»",
+"Quem conta um conto":"Every teller",
+"acrescenta um ponto":"adds to the tale",
+"«Quem conta um conto…»":"«Every teller…»",
+"…acrescenta um ponto":"…adds to the tale",
+"«Quem conta um conto, acrescenta um ponto.»":"«Every teller, adds to the tale.»",
+"Águas passadas":"Water under the bridge",
+"não movem moinhos":"turns no mill",
+"«Águas passadas…»":"«Water under the bridge…»",
+"…não movem moinhos":"…turns no mill",
+"«Águas passadas, não movem moinhos.»":"«Water under the bridge, turns no mill.»",
+"O seguro":"Better safe",
+"morreu de velho":"than sorry",
+"«O seguro…»":"«Better safe…»",
+"…morreu de velho":"…than sorry",
+"«O seguro, morreu de velho.»":"«Better safe, than sorry.»",
+"Quem muito abarca":"Grasp all",
+"pouco aperta":"lose all",
+"«Quem muito abarca…»":"«Grasp all…»",
+"…pouco aperta":"…lose all",
+"«Quem muito abarca, pouco aperta.»":"«Grasp all, lose all.»",
+"Amigos, amigos":"Friends are friends",
+"negócios à parte":"but business is business",
+"«Amigos, amigos…»":"«Friends are friends…»",
+"…negócios à parte":"…but business is business",
+"«Amigos, amigos, negócios à parte.»":"«Friends are friends, but business is business.»",
+"Um homem prevenido":"Forewarned",
+"vale por dois":"is forearmed",
+"«Um homem prevenido…»":"«Forewarned…»",
+"…vale por dois":"…is forearmed",
+"«Um homem prevenido, vale por dois.»":"«Forewarned, is forearmed.»",
+"Não há bela":"There is no rose",
+"sem senão":"without a thorn",
+"«Não há bela…»":"«There is no rose…»",
+"…sem senão":"…without a thorn",
+"«Não há bela, sem senão.»":"«There is no rose, without a thorn.»",
+"Quem com ferros mata":"He who lives by the sword",
+"com ferros morre":"dies by the sword",
+"«Quem com ferros mata…»":"«He who lives by the sword…»",
+"…com ferros morre":"…dies by the sword",
+"«Quem com ferros mata, com ferros morre.»":"«He who lives by the sword, dies by the sword.»",
+"Burro velho":"You cannot teach an old dog",
+"não aprende línguas":"new tricks",
+"«Burro velho…»":"«You cannot teach an old dog…»",
+"…não aprende línguas":"…new tricks",
+"«Burro velho, não aprende línguas.»":"«You cannot teach an old dog, new tricks.»",
+"Quem vai ao mar":"He who goes to sea",
+"avia-se em terra":"must prepare on land",
+"«Quem vai ao mar…»":"«He who goes to sea…»",
+"…avia-se em terra":"…must prepare on land",
+"«Quem vai ao mar, avia-se em terra.»":"«He who goes to sea, must prepare on land.»",
+"Quem dá aos pobres":"He who gives to the poor",
+"empresta a Deus":"lends to God",
+"«Quem dá aos pobres…»":"«He who gives to the poor…»",
+"…empresta a Deus":"…lends to God",
+"«Quem dá aos pobres, empresta a Deus.»":"«He who gives to the poor, lends to God.»",
+"Casa onde não há pão":"In a house without bread",
+"todos ralham e ninguém tem razão":"everyone quarrels and no one is right",
+"«Casa onde não há pão…»":"«In a house without bread…»",
+"…todos ralham e ninguém tem razão":"…everyone quarrels and no one is right",
+"«Casa onde não há pão, todos ralham e ninguém tem razão.»":"«In a house without bread, everyone quarrels and no one is right.»",
+"Em casa de ferreiro":"The blacksmith’s house",
+"espeto de pau":"has a wooden spit",
+"«Em casa de ferreiro…»":"«The blacksmith’s house…»",
+"…espeto de pau":"…has a wooden spit",
+"«Em casa de ferreiro, espeto de pau.»":"«The blacksmith’s house, has a wooden spit.»",
+"Quem parte e reparte":"He who shares out",
+"fica com a melhor parte":"keeps the best share",
+"«Quem parte e reparte…»":"«He who shares out…»",
+"…fica com a melhor parte":"…keeps the best share",
+"«Quem parte e reparte, fica com a melhor parte.»":"«He who shares out, keeps the best share.»",
+"Diz-me com quem andas":"Tell me who you walk with",
+"dir-te-ei quem és":"and I will tell you who you are",
+"«Diz-me com quem andas…»":"«Tell me who you walk with…»",
+"…dir-te-ei quem és":"…and I will tell you who you are",
+"«Diz-me com quem andas, dir-te-ei quem és.»":"«Tell me who you walk with, and I will tell you who you are.»",
+"A ocasião":"Opportunity",
+"faz o ladrão":"makes the thief",
+"«A ocasião…»":"«Opportunity…»",
+"…faz o ladrão":"…makes the thief",
+"«A ocasião, faz o ladrão.»":"«Opportunity, makes the thief.»",
+"Do mal":"Of two evils",
+"o menos":"the lesser",
+"«Do mal…»":"«Of two evils…»",
+"…o menos":"…the lesser",
+"«Do mal, o menos.»":"«Of two evils, the lesser.»"
+});
+
+
+Object.assign(DIC, {
+"Localização dos dados.": "Where the data lives.",
+"Como ler estes números.": "How to read these numbers.",
+"Ligado — para baixa visão": "On — for low vision",
+"Ligados — a app lê tudo em voz alta": "On — the app reads everything aloud",
+"Alguns exercícios definem um número próprio.": "Some exercises set their own count.",
+"Cansou-se depois do terceiro exercício.": "Grew tired after the third exercise.",
+"Melhor desempenho de manhã do que à tarde.": "Better performance in the morning than in the afternoon.",
+"Precisou de repetição da instrução nos primeiros exercícios.": "Needed the instruction repeated in the first exercises.",
+"Muito participativa; reconheceu quase todos os provérbios.": "Very engaged; recognised almost every proverb.",
+"Falou da neta durante toda a sessão. Bem-disposto.": "Talked about his granddaughter throughout. In good spirits.",
+"Comentou que já não fazia contas há anos.": "Remarked that she had not done sums in years.",
+"Pediu para parar a meio; visita da família.": "Asked to stop halfway; family visit.",
+"Últimas 8 semanas · recolhido automaticamente": "Last 8 weeks · collected automatically",
+"Exercícios impressos, gerados ao nível de cada utente": "Printed exercises, generated at each resident's level",
+"Nove exercícios, seis domínios. Cada um adapta-se por parâmetros próprios.": "Nine exercises, six domains. Each adapts through its own parameters.",
+"Raridade do provérbio e número de opções (2 a 4).": "Rarity of the proverb and number of options (2 to 4).",
+"Número de grupos (2 a 4) e grau de abstração da regra.": "Number of groups (2 to 4) and abstraction of the rule.",
+"Tipo de operação, grandeza dos números e presença de cêntimos.": "Type of operation, size of numbers and presence of cents.",
+"Comprimento da sequência (2 a 9) e velocidade de apresentação.": "Sequence length (2 to 9) and presentation speed.",
+"Tamanho da grelha, número de alvos e semelhança dos distratores.": "Grid size, number of targets and similarity of distractors.",
+"Da parte do dia (mais fácil) até à contagem de dias no calendário.": "From time of day (easiest) to counting days on the calendar.",
+"Tempo que cada figura fica no ecrã e proporção de sinais a ignorar.": "How long each figure stays on screen and the proportion of signals to withhold.",
+"Tamanho da lista (3 a 10), tempo de exposição e número de distratores.": "List length (3 to 10), exposure time and number of distractors.",
+"Número de pares (2 a 8), tempo de pré-visualização e tolerância de tentativas.": "Number of pairs (2 to 8), preview time and attempt tolerance.",
+"Quatro dígitos. Impede que o ecrã de dados fique acessível durante uma sessão.": "Four digits. Keeps the data screen out of reach during a session.",
+"Aparece no relatório e serve de resposta certa no exercício de orientação espacial.": "Appears on the report and serves as the correct answer in the spatial orientation exercise.",
+"Essencial para utentes que não leem bem. Usa a voz do sistema; não precisa de internet.": "Essential for residents who do not read well. Uses the system voice; needs no internet.",
+"O modo define a taxa de acerto que o motor procura manter. Mais alta = exercícios mais fáceis.": "The mode sets the success rate the engine aims to hold. Higher = easier exercises.",
+"Nome preenchido por omissão no fim da sessão": "Name pre-filled at the end of the session",
+"Boa parte dos utentes de lar tem a 4.ª classe ou menos. Este campo faz o conteúdo mudar, não só o tamanho da letra.": "A large share of care home residents have four years of schooling or fewer. This field changes the content, not just the type size.",
+"Define apenas o ponto de partida. Ao fim de uma ou duas sessões o motor corrige-o sozinho a partir do desempenho real.": "Sets only the starting point. After one or two sessions the engine corrects it from actual performance.",
+"Ajudam a equipa a puxar conversa durante os exercícios.": "Help the team make conversation during the exercises.",
+"O motor procura manter uma taxa de acerto-alvo. Se o observado se aproximar do alvo, o modelo está a funcionar como previsto.": "The engine aims to hold a target success rate. If the observed value approaches the target, the model is working as intended.",
+"Desvio até 6 pontos percentuais é bom. Acima de 12 sugere que o nível de partida está mal calibrado ou que faltam observações.": "A deviation up to 6 percentage points is good. Above 12 suggests the starting level is miscalibrated or observations are lacking.",
+"Antes de registar um utente, obtenha consentimento informado do próprio ou do representante legal, conforme o procedimento da instituição.": "Before registering a resident, obtain informed consent from them or their legal representative, following the institution's procedure.",
+"A adesão ao longo do tempo é o indicador de viabilidade mais importante de um piloto: mostra se a atividade se mantém depois da novidade passar.": "Adherence over time is the single most important feasibility indicator in a pilot: it shows whether the activity survives once the novelty wears off.",
+"O Elos funciona só com iniciais ou um código interno. O campo do nome é opcional — se a instituição preferir, deixe-o em branco e identifique o utente por código.": "Elos works with initials or an internal code alone. The name field is optional — if the institution prefers, leave it blank and identify residents by code.",
+"Não há servidor nem conta. Os registos ficam no armazenamento do navegador deste equipamento. Apagar os dados do navegador apaga os registos: por isso as cópias de segurança importam.": "There is no server and no account. Records live in this device's browser storage. Clearing browser data deletes the records: this is why backups matter.",
+"O Elos não diagnostica, não estadia demência e não substitui avaliação neuropsicológica ou parecer médico. Os índices medem desempenho nestes exercícios e servem para adaptar as sessões e sinalizar alterações à equipa.": "Elos does not diagnose, does not stage dementia and does not replace neuropsychological assessment or medical opinion. The indices measure performance on these exercises and serve to adapt sessions and flag changes to the team.",
+"O índice de cada domínio (0–100) é uma estimativa da dificuldade que o utente resolve com cerca de 50% de probabilidade — é uma medida de desempenho nos exercícios do Elos, não um resultado de avaliação neuropsicológica. Serve para ajustar as sessões e para sinalizar mudanças que valha a pena discutir com a equipa clínica.": "Each domain index (0–100) estimates the difficulty a resident solves with roughly 50% probability — a measure of performance on Elos exercises, not a neuropsychological assessment result. It serves to tune sessions and flag changes worth discussing with the clinical team.",
+"Esta variação mede desempenho nos exercícios do Elos, não função cognitiva. Sem grupo de controlo, parte da subida é efeito de prática — as pessoas melhoram no exercício sem melhorarem no que o exercício representa. Apresente este número como indicador de envolvimento na atividade, nunca como evidência de efeito cognitivo.": "This change measures performance on Elos exercises, not cognitive function. Without a control group, part of any rise is a practice effect — people improve at the task without improving at what the task represents. Present this figure as an indicator of engagement, never as evidence of cognitive effect.",
+"Nem tudo tem de passar por um ecrã. Estas fichas usam o mesmo motor de dificuldade da aplicação, mas em papel — para utentes que preferem escrever, para momentos sem tablet disponível, ou para instituições que ainda trabalham em suporte físico. Os resultados em papel não entram automaticamente no histórico; registe-os na aplicação se quiser que contem.": "Not everything has to go through a screen. These worksheets use the same difficulty engine as the app, but on paper — for residents who prefer to write, for moments without a tablet, or for institutions that still work on paper. Paper results do not enter the history automatically; record them in the app if you want them counted.",
+"Marque quem está na sala. A dificuldade segue o nível médio dos presentes e a presença fica registada no histórico de cada um.": "Mark who is in the room. Difficulty follows the average level of those present, and attendance is recorded in each person's history.",
+"Projete o ecrã na televisão da sala. Use a tecla → ou o botão Seguinte para avançar ao seu ritmo — nada avança sozinho.": "Cast the screen to the room's television. Use the → key or the Next button to advance at your own pace — nothing advances on its own.",
+"Nova sessão de grupo": "New group session",
+"Duas notas rápidas para o histórico. Pode deixar em branco.": "Two quick notes for the history. May be left blank.",
+"Ex.: cansou-se no terceiro exercício; falou da neta durante os provérbios.": "E.g. tired at the third exercise; talked about her granddaughter during the proverbs.",
+"Ex.: usa aparelho auditivo à direita; cansa-se depois das 16h.": "E.g. hearing aid in the right ear; tires after 4pm."
+});
+
+PADROES.push(
+  [/^(\d{2}\/\d{2}\/\d{4}) — índice (\d+)$/, (m,a,b) => `${a} — index ${b}`],
+  [/^Sessão de grupo com (\d+) participantes — (\d+)\/(\d+) respostas certas\.$/, (m,a,b,c) => `Group session with ${a} participants — ${b}/${c} correct answers.`],
+  [/^Equilíbrio \(da instituição\)$/, () => 'Balanced (institution default)'],
+  [/^Seguir a instituição \((.+)\)$/, (m,a) => `Follow the institution (${DIC[a] || a})`],
+  [/^(Conforto|Equilíbrio|Desafio) — alvo (\d+)% de acerto$/, (m,a,b) => `${DIC[a] || a} — ${b}% success target`],
+  [/^pontos de variação média entre a primeira e a última sessão, em (\d+) utentes?$/, (m,a) => `points of mean change between first and last session, across ${a} resident${a==='1'?'':'s'}`],
+  [/^\(dispositivo\)\. (.+)$/, () => '(device). Nothing is sent to the internet. Back up regularly and store the file securely, as you would any resident record.'],
+  [/^(\d+) \(~(\d+) min\)$/, (m,a,b) => `${a} (~${b} min)`],
+  [/^Mais lento — tempos alargados em 60%$/, () => 'Slower — timings extended by 60%'],
+  [/^Tudo fica guardado $/, () => 'Everything is stored '],
+  [/^neste dispositivo$/, () => 'on this device']
+);
+
+/* ---------- tradutor ---------- */
+/* Índice insensível a maiúsculas: vários títulos são postos em
+   maiúsculas pelo CSS, mas no DOM estão em capitalização normal. */
+const DIC_BAIXO = {};
+Object.keys(DIC).forEach(k => { DIC_BAIXO[k.toLowerCase()] = DIC[k]; });
+
+const MESES_PT = ['janeiro','fevereiro','março','abril','maio','junho','julho',
+  'agosto','setembro','outubro','novembro','dezembro'];
+const MESES_EN = ['January','February','March','April','May','June','July',
+  'August','September','October','November','December'];
+
+function frase(limpo){
+  if(DIC[limpo] !== undefined) return DIC[limpo];
+  const baixo = limpo.toLowerCase();
+  if(DIC_BAIXO[baixo] !== undefined) return DIC_BAIXO[baixo];
+  for(const [re, fn] of PADROES){
+    const m = limpo.match(re);
+    if(m) return fn.apply(null, m);
+  }
+  /* data por extenso: 10 de agosto de 2026 */
+  const d = limpo.match(/^(\d{1,2}) de (\S+) de (\d{4})$/);
+  if(d){
+    const i = MESES_PT.indexOf(d[2].toLowerCase());
+    if(i >= 0) return `${d[1]} ${MESES_EN[i]} ${d[3]}`;
+  }
+  /* prefixo numerado: "1. Pares de Memória" */
+  const n = limpo.match(/^(\d+)\.\s+(.+)$/);
+  if(n){ const r = frase(n[2]); if(r !== null) return `${n[1]}. ${r}`; }
+  /* cadeias compostas separadas por ponto médio */
+  if(limpo.includes(' · ')){
+    const partes = limpo.split(' · ');
+    const trad = partes.map(p => { const r = frase(p.trim()); return r === null ? p.trim() : r; });
+    if(trad.some((v, i) => v !== partes[i].trim())) return trad.join(' · ');
+  }
+  return null;
+}
+
+function traduzirTexto(t){
+  const limpo = t.trim();
+  if(!limpo || limpo.length < 2) return null;
+  const r = frase(limpo);
+  return r === null ? null : t.replace(limpo, r);
+}
+
+function traduzirNo(raiz){
+  if(LANG !== 'en' || !raiz) return;
+  const anda = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT, null);
+  const nos = [];
+  while(anda.nextNode()) nos.push(anda.currentNode);
+  nos.forEach(n => {
+    if(n.parentElement && /SCRIPT|STYLE/.test(n.parentElement.tagName)) return;
+    const novo = traduzirTexto(n.nodeValue);
+    if(novo !== null) n.nodeValue = novo;
   });
-  const inst = $('#btn-instalar'); if(inst) inst.textContent = EN.instalar;
-  const rod = $('#view-entrada .entrada-rodape > div:not(#estado-offline)');
-  if(rod) rod.innerHTML = esc(EN.rodape) +
-    `<div style="margin-top:8px;max-width:60ch;margin-inline:auto;opacity:.85">${esc(EN.nota)}</div>`;
+  const els = raiz.nodeType === 1 ? [raiz].concat(Array.from(raiz.querySelectorAll('[placeholder],[title],[aria-label]'))) : [];
+  els.forEach(el => ['placeholder','title','aria-label'].forEach(a => {
+    const v = el.getAttribute && el.getAttribute(a);
+    if(v){ const novo = traduzirTexto(v); if(novo !== null) el.setAttribute(a, novo); }
+  }));
 }
 
-function trocarIdioma(){
-  LANG = LANG === 'pt' ? 'en' : 'pt';
-  try{ localStorage.setItem('elos:lang', LANG); }catch(e){}
-  aplicarIdioma();
-}
+/* Observador: tudo o que aparecer no ecrã passa pelo tradutor. */
+const observador = new MutationObserver(muts => {
+  if(LANG !== 'en') return;
+  muts.forEach(m => m.addedNodes.forEach(n => {
+    if(n.nodeType === 1) traduzirNo(n);
+    else if(n.nodeType === 3){
+      const novo = traduzirTexto(n.nodeValue);
+      if(novo !== null) n.nodeValue = novo;
+    }
+  }));
+});
 
-/* ---------- Metodologia em inglês ---------- */
+
+/* ---------- Metodologia: versão inglesa dedicada ---------- */
 function metodologiaEN(){
   return `
   <div class="tela-cab">
     <div><div class="eyebrow">Foundations</div><h1>Methodology</h1>
       <div class="sub">What the application does, how it decides, and what it cannot claim</div></div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secundario" onclick="trocarIdioma();Pro.render()">Ver em português</button>
-      <button class="btn btn-secundario" onclick="window.print()">Print</button>
-    </div>
+    <button class="btn btn-secundario" onclick="window.print()">Print</button>
   </div>
-
   <div class="cartao" style="margin-bottom:14px">
     <div class="cartao-cab"><h3>1. How difficulty is chosen</h3></div>
-    <p style="font-size:14px;margin:0 0 12px"><b>In one sentence:</b> the application estimates each resident's ability in each domain and selects, for the next exercise, the difficulty at which they should succeed about 78% of the time — revising that estimate after every response.</p>
+    <p style="font-size:14px;margin:0 0 12px"><b>In one sentence:</b> the application estimates each resident\u2019s ability in each domain and selects, for the next exercise, the difficulty at which they should succeed about 78% of the time — revising that estimate after every response.</p>
     <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 12px">It is not "three correct answers raise the level". It is a one-parameter logistic model, from the same family as the Rasch models used in adaptive testing and the Elo system in chess:</p>
     <div style="background:var(--porcelana);border:1.5px solid var(--junta);border-radius:6px;padding:14px;font-family:ui-monospace,monospace;font-size:13px;line-height:1.9;margin-bottom:12px">
       P(correct) = 1 / (1 + 10<sup>(d − θ)/25</sup>)<br>
       d = θ − 25 · log₁₀( p / (1 − p) )<br>
       θ ← θ + K · (outcome − P) &nbsp;&nbsp; K = 8 + 14·e<sup>−n/8</sup>
     </div>
-    <p style="font-size:13px;color:var(--ardosia);margin:0">θ is estimated ability in the domain, d is item difficulty, p is the target success rate of the selected mode. The step size K is large while few observations exist and stabilises with practice, so the profile converges quickly in the first sessions without oscillating afterwards.</p>
+    <p style="font-size:13px;color:var(--ardosia);margin:0">θ is estimated ability in the domain, d is item difficulty, p is the target success rate. Step size K is large while few observations exist and stabilises with practice, so the profile converges quickly without oscillating later.</p>
   </div>
-
   <div class="cartao" style="margin-bottom:14px">
     <div class="cartao-cab"><h3>2. Domains and exercises</h3></div>
     <table class="tab"><thead><tr><th>Domain</th><th>Function</th><th>Exercises</th></tr></thead><tbody>
@@ -3399,67 +4059,78 @@ function metodologiaEN(){
          ['Executive function','Categorising, planning, switching rules','executivas'],
          ['Calculation','Handling numbers in everyday situations','calculo'],
          ['Orientation','Placing oneself in time, space and routine','orientacao']]
-        .map(([n,f,k]) => `<tr><td><b>${n}</b></td>
-          <td style="color:var(--ardosia);font-size:12.5px">${f}</td>
-          <td style="font-size:12.5px">${JOGOS.filter(j => j.dominio === k).length} exercises</td></tr>`).join('')}
+        .map(([n,f,k]) => `<tr><td><b>${n}</b></td><td style="color:var(--ardosia);font-size:12.5px">${f}</td><td style="font-size:12.5px">${JOGOS.filter(j=>j.dominio===k).length} exercises</td></tr>`).join('')}
     </tbody></table>
-    <p style="font-size:12px;color:var(--ardosia-clara);margin:12px 0 0">The six domains correspond to areas commonly covered by widely used cognitive screening instruments (MMSE, MoCA). The correspondence is one of <i>task type</i>, not psychometric equivalence: Elos exercises are not validated items from those instruments and do not produce comparable scores.</p>
+    <p style="font-size:12px;color:var(--ardosia-clara);margin:12px 0 0">The six domains correspond to areas covered by widely used cognitive screening instruments (MMSE, MoCA). The correspondence is one of <i>task type</i>, not psychometric equivalence: Elos exercises are not validated items and do not produce comparable scores.</p>
   </div>
-
   <div class="cartao" style="margin-bottom:14px">
     <div class="cartao-cab"><h3>3. Session structure</h3></div>
-    <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 10px">Exercise order is not random. A session opens in the resident's most preserved domain, works the weaker ones in the middle, and closes on an intermediate domain so it ends with an experience of success.</p>
-    <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 10px"><b>Frustration brake:</b> three consecutive errors lower difficulty by 11 points and offer the resident the option to move on.</p>
-    <p style="font-size:12px;color:var(--ardosia-clara);margin:0">Both rules are motivational heuristics assumed by the author, not replicated findings. They should be treated as hypotheses to be tested in the pilot.</p>
+    <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 10px">Exercise order is not random. A session opens in the resident\u2019s most preserved domain, works weaker ones in the middle, and closes on an intermediate domain so it ends with an experience of success.</p>
+    <p style="font-size:13.5px;color:var(--ardosia);margin:0 0 10px"><b>Frustration brake:</b> three consecutive errors lower difficulty by 11 points and offer the option to move on.</p>
+    <p style="font-size:12px;color:var(--ardosia-clara);margin:0">Both rules are motivational heuristics assumed by the author, not replicated findings. They should be treated as hypotheses to test in the pilot.</p>
   </div>
-
   <div class="cartao" style="margin-bottom:14px">
     <div class="cartao-cab"><h3>4. Accessibility</h3></div>
     <table class="tab"><tbody>
       <tr><td style="width:38%;color:var(--ardosia)">Typeface</td><td>Atkinson Hyperlegible, designed by the Braille Institute for low-vision readers</td></tr>
       <tr><td style="color:var(--ardosia)">Type size</td><td>18 px base in resident mode, adjustable to 150% per person</td></tr>
       <tr><td style="color:var(--ardosia)">Touch targets</td><td>76 px minimum height — above guideline, for hands with tremor</td></tr>
-      <tr><td style="color:var(--ardosia)">Reading</td><td>Every prompt is spoken aloud in Portuguese; a repeat button is always available</td></tr>
-      <tr><td style="color:var(--ardosia)">Schooling</td><td>Per-resident profile adjusts how much written text the content relies on</td></tr>
-      <tr><td style="color:var(--ardosia)">Timing</td><td>No exercise requires speed to succeed; slow mode extends all timings by 60%</td></tr>
+      <tr><td style="color:var(--ardosia)">Reading</td><td>Every prompt spoken aloud; repeat button always available</td></tr>
+      <tr><td style="color:var(--ardosia)">Schooling</td><td>Per-resident profile adjusts how much the content relies on written text</td></tr>
+      <tr><td style="color:var(--ardosia)">Timing</td><td>No exercise requires speed to succeed; slow mode extends timings by 60%</td></tr>
       <tr><td style="color:var(--ardosia)">Contrast</td><td>Per-resident high contrast mode</td></tr>
-      <tr><td style="color:var(--ardosia)">Motion</td><td><code>prefers-reduced-motion</code> respected</td></tr>
     </tbody></table>
-    <p style="font-size:12px;color:var(--ardosia-clara);margin:12px 0 0">Spoken prompts are not a convenience feature. A large share of care home residents in Portugal completed four years of schooling or fewer; an exercise that requires fluent reading excludes half the room.</p>
+    <p style="font-size:12px;color:var(--ardosia-clara);margin:12px 0 0">Spoken prompts are not a convenience feature. A large share of care home residents in Portugal completed four years of schooling or fewer; an exercise requiring fluent reading excludes half the room.</p>
   </div>
-
   <div class="cartao" style="margin-bottom:14px">
     <div class="cartao-cab"><h3>5. Data protection</h3></div>
     <div style="font-size:13.5px;color:var(--ardosia);line-height:1.7">
-      <p style="margin:0 0 10px"><b>Where data lives.</b> In this device's browser storage. No server, no account, no transmission over the internet. The application makes no network requests once installed.</p>
-      <p style="margin:0 0 10px"><b>Minimisation.</b> The name field is optional. An institution may operate with initials or an internal code only.</p>
-      <p style="margin:0 0 10px"><b>Legal basis.</b> Health data is a special category under Article 9 GDPR. Processing requires explicit consent from the data subject or their legal representative, alongside institutional authorisation.</p>
-      <p style="margin:0"><b>Retention and erasure.</b> Any resident can be deleted with their complete history from their profile. Backups are files the institution controls and must safeguard like any other resident record.</p>
+      <p style="margin:0 0 10px"><b>Where data lives.</b> In this device\u2019s browser storage. No server, no account, no transmission over the internet.</p>
+      <p style="margin:0 0 10px"><b>Minimisation.</b> The name field is optional; initials or an internal code suffice.</p>
+      <p style="margin:0 0 10px"><b>Legal basis.</b> Health data is a special category under Article 9 GDPR. Processing requires explicit consent from the data subject or legal representative, alongside institutional authorisation.</p>
+      <p style="margin:0"><b>Retention and erasure.</b> Any resident can be deleted with their complete history. Backups are files the institution controls.</p>
     </div>
   </div>
-
   <div class="cartao" style="border-color:var(--ocre)">
     <div class="cartao-cab"><h3 style="color:var(--tijolo)">6. Limits — what this tool is not</h3></div>
     <div style="font-size:13.5px;line-height:1.75">
       <p style="margin:0 0 10px">Elos <b>does not diagnose</b>, does not stage dementia, and does not replace neuropsychological assessment or medical opinion.</p>
-      <p style="margin:0 0 10px">The indices measure <b>performance on these exercises</b>. A rise may reflect practice on the task rather than improvement in the function the task represents — the distinction between <i>learning the task</i> and <i>transfer</i>, which cannot be separated without a control group.</p>
-      <p style="margin:0 0 10px">The margin shown (± n) shrinks with the number of observations but is an approximation, not a formal confidence interval.</p>
-      <p style="margin:0">Changes should be read alongside clinical status, medication, sleep and the resident's disposition on the day. Meaningful shifts warrant a conversation with the clinical team, not conclusions drawn from the application.</p>
+      <p style="margin:0 0 10px">The indices measure <b>performance on these exercises</b>. A rise may reflect practice on the task rather than improvement in the function it represents — the distinction between <i>learning the task</i> and <i>transfer</i>, inseparable without a control group.</p>
+      <p style="margin:0 0 10px">The margin shown (± n) shrinks with observations but is an approximation, not a formal confidence interval.</p>
+      <p style="margin:0">Changes should be read alongside clinical status, medication, sleep and disposition on the day.</p>
     </div>
   </div>
+  <div style="margin-top:20px;font-size:12px;color:var(--ardosia-clara)"><b>Clinical review:</b> pending.</div>`;
+}
+(function(){ const orig = Pro.metodologia;
+  Pro.metodologia = function(){ return LANG === 'en' ? metodologiaEN() : orig.call(this); }; })();
 
-  <div style="margin-top:20px;font-size:12px;color:var(--ardosia-clara)">
-    <b>Clinical review:</b> pending. This tool benefits from review by a psychologist, neuropsychologist or occupational therapist before institutional use.
-  </div>`;
+function trocarIdioma(){
+  LANG = LANG === 'pt' ? 'en' : 'pt';
+  try{ localStorage.setItem('elos:lang', LANG); }catch(e){}
+  location.reload();
 }
 
-/* substituir o painel de metodologia conforme o idioma */
-(function(){
-  const original = Pro.metodologia;
-  Pro.metodologia = function(){
-    return LANG === 'en' ? metodologiaEN() : original.call(this);
-  };
-})();
+function arrancarIdioma(){
+  const btn = $('#btn-idioma');
+  if(btn) btn.textContent = LANG === 'en' ? 'Ver em português' : 'Read in English';
+  if(LANG !== 'en') return;
+  document.documentElement.lang = 'en';
+  traduzirNo(document.body);
+  observador.observe(document.body, { childList:true, subtree:true });
+  const h1 = $('#view-entrada h1');
+  if(h1) h1.innerHTML = 'Everyone has their own pace.<br>The exercise adjusts to it.';
+  const lead = $('#view-entrada p.lead');
+  if(lead) lead.textContent = 'Elos builds cognitive stimulation sessions that calibrate, exercise by exercise, to each resident\u2019s actual ability — and records progress for the care team to follow.';
+  const rod = $('#view-entrada .entrada-rodape');
+  if(rod && !$('#nota-idioma')){
+    const d = document.createElement('div');
+    d.id = 'nota-idioma'; d.style.cssText = 'margin-top:8px;max-width:62ch;margin-inline:auto;opacity:.8';
+    d.textContent = 'Interface translated to English. Exercise content — Portuguese proverbs, sums in euros, shopping lists — is translated where meaningful; the underlying application is built for a Portuguese care home.';
+    rod.appendChild(d);
+  }
+}
+
 </script>
 <script>
 /* =============================================================
@@ -3663,8 +4334,8 @@ function gerarDemo(){
     if(r && r.r === 'demo'){ gerarDemo(); await gravar(); proDesbloqueado = true; return irPara('pro'); }
   }
 
-  if(typeof aplicarIdioma === 'function' && LANG === 'en') aplicarIdioma();
   irPara('entrada');
+  arrancarIdioma();
 })();
 </script>
 <script>

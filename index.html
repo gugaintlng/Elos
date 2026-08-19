@@ -3624,7 +3624,7 @@ const PADROES = [
   [/^Olá, (.+)$/, (m,a) => `Hello, ${a}`],
   [/^Hoje temos (\d+) exercícios\. Leva à volta de (\d+) minutos e pode parar quando quiser\.$/, (m,a,b) => `Today we have ${a} exercises. It takes about ${b} minutes and you can stop whenever you like.`],
   [/^Preparámos (\d+) exercícios para hoje.*$/, (m,a) => `We have ${a} exercises ready for today.`],
-  [/^Modo (.+)$/, (m,a) => `Mode: ${DIC[a] || a}`],
+  [/^Modo (Conforto|Equilíbrio|Desafio)$/, (m,a) => `${DIC[a] || a} mode`],
   [/^(\d+) de (\d+) certos$/, (m,a,b) => `${a} of ${b} correct`],
   [/^(\d+) de (\d+) exercícios certos, em (\d+) minutos?\. Obrigado(.*)!$/, (m,a,b,c,d) => `${a} of ${b} exercises correct, in ${c} minute${c==='1'?'':'s'}. Thank you${d}!`],
   [/^Sessão de grupo · (\d+) participantes$/, (m,a) => `Group session · ${a} participants`],
@@ -4002,6 +4002,113 @@ PADROES.push(
 );
 
 
+
+Object.assign(DIC, {
+"Introduza o PIN de quatro dígitos.": "Enter the four-digit PIN.",
+"PIN errado. Tente outra vez.": "Wrong PIN. Try again.",
+"Ler com cuidado.": "Read with care.",
+"Quem dinamiza habitualmente": "Usual facilitator",
+"Proteção de dados e limites da ferramenta": "Data protection and limits of the tool",
+"Minimização.": "Minimisation.",
+"O que isto não é.": "What this is not.",
+"Consentimento.": "Consent.",
+"Nova sessão de grupo": "New group session",
+"Modo grupo": "Group mode",
+"Ainda não há utentes": "No residents yet",
+"Bem-vindo ao Elos": "Welcome to Elos",
+"Começar do zero": "Start from scratch",
+"Ver a demonstração": "See the demonstration",
+"Editar utente": "Edit resident",
+"Recalibrar perfil?": "Recalibrate profile?",
+"Apagar definitivamente?": "Delete permanently?",
+"Apagar todos os dados?": "Delete all data?",
+"Gerar dados de demonstração?": "Generate demonstration data?",
+"Restaurar esta cópia?": "Restore this backup?",
+"Terminar a sessão?": "End the session?",
+"Terminar a sessão de grupo?": "End the group session?",
+"Recalibrar": "Recalibrate",
+"Apagar": "Delete",
+"Restaurar": "Restore",
+"Relatório de estimulação cognitiva": "Cognitive stimulation report",
+"Nota de interpretação.": "Interpretation note.",
+"Profissional responsável": "Responsible professional",
+"Imprimir ou guardar em PDF": "Print or save as PDF",
+"Emitido a": "Issued on",
+"Identificação": "Identification",
+"Idade": "Age",
+"Período": "Period",
+"Sessões / exercícios": "Sessions / exercises",
+"Evolução do índice global": "Overall index over time",
+"A sua instituição": "Your institution",
+"Correr": "Run",
+"Dificuldade": "Difficulty",
+"Ensaio": "Trial",
+"Sem dados suficientes.": "Not enough data.",
+"Faltam sessões para desenhar a evolução (mínimo 2)": "More sessions needed to draw the trend (minimum 2)",
+"Faltam sessões para desenhar a curva.": "More sessions needed to draw the curve.",
+"Ainda sem exercícios neste domínio.": "No exercises in this domain yet.",
+"Cada utente tem um perfil próprio com o seu nível em seis domínios cognitivos. As sessões calibram-se a esse perfil desde o primeiro exercício.": "Each resident has their own profile with their level across six cognitive domains. Sessions calibrate to that profile from the very first exercise.",
+"Registar o primeiro utente": "Register the first resident",
+"Assim que fizer a primeira sessão, o histórico aparece aqui com o detalhe de cada exercício.": "Once the first session is done, the history appears here with the detail of every exercise.",
+"Corre um exercício isolado, sem gravar nada. Serve para ver como o mesmo jogo muda com a dificuldade.": "Runs a single exercise without recording anything. Useful to see how the same game changes with difficulty.",
+"Sessão guardada": "Session saved",
+"Guardado": "Saved",
+"Preferência guardada": "Preference saved",
+"Utente criado": "Resident created",
+"Utente atualizado": "Resident updated",
+"Utente apagado": "Resident deleted",
+"Cópia descarregada": "Backup downloaded",
+"Cópia restaurada": "Backup restored",
+"Perfil recalibrado": "Profile recalibrated",
+"Dados apagados": "Data deleted",
+"Demonstração criada": "Demonstration created",
+"PIN alterado": "PIN changed",
+"Marque pelo menos dois participantes": "Select at least two participants",
+"Indique pelo menos as iniciais": "Enter at least the initials",
+"Ainda não há sessões para exportar": "No sessions to export yet",
+"Ficheiro inválido — não é uma cópia do Elos": "Invalid file — not an Elos backup",
+"Os exercícios já feitos ficam guardados. A sessão fica assinalada como interrompida no histórico.": "Exercises already completed are saved. The session is marked as interrupted in the history.",
+"Os exercícios já feitos ficam registados no histórico de cada participante.": "Exercises already completed are recorded in each participant's history.",
+"Marque quem está na sala. A dificuldade segue o nível médio dos presentes e a presença fica registada no histórico de cada um.": "Mark who is in the room. Difficulty follows the average level of those present, and attendance is recorded in each person's history.",
+"Projete o ecrã na televisão da sala. Use a tecla": "Cast the screen to the room's television. Use the",
+"para avançar ao seu ritmo — nada avança sozinho.": "key to advance at your own pace — nothing advances on its own.",
+"O modo grupo precisa de pelo menos dois utentes registados. Registe os participantes na área de Utentes.": "Group mode needs at least two registered residents. Register participants in the Residents area.",
+"Para começar uma sessão é preciso registar pelo menos um utente. Entre na área profissional e adicione o primeiro.": "To start a session you need at least one registered resident. Go to the professional area and add the first one.",
+"Duas notas rápidas para o histórico. Pode deixar em branco.": "Two quick notes for the history. May be left blank.",
+"Seguinte": "Next"
+});
+
+
+Object.assign(DIC, {
+"Experimentar": "Try it",
+"Fechar": "Close",
+"Correr": "Run",
+"Cancelar": "Cancel",
+"Provérbios": "Proverbs",
+"Pares de Memória": "Memory Pairs",
+"Sequência de Cores": "Colour Sequence",
+"Lista de Compras": "Shopping List",
+"Encontrar Iguais": "Find the Matches",
+"Sinal Certo": "Right Signal",
+"Arrumar por Grupos": "Sort into Groups",
+"Contas do Dia a Dia": "Everyday Sums",
+"Aqui e Agora": "Here and Now",
+"O modo grupo precisa de pelo menos dois utentes registados. Registe os participantes na área de Utentes.": "Group mode needs at least two registered residents. Register the participants in the Residents area."
+});
+
+
+Object.assign(DIC, {
+"Esta é a primeira vez que abre o Elos neste dispositivo. Pode começar de duas maneiras:": "This is the first time Elos has been opened on this device. There are two ways to start:",
+"— 6 utentes fictícios com 8 semanas de sessões simuladas, para perceber os gráficos e os relatórios antes de usar a sério.": "— 6 fictional residents with 8 weeks of simulated sessions, so you can see the charts and reports before using it for real.",
+"— registar o primeiro utente real.": "— register the first real resident.",
+"O PIN da área profissional começa em": "The professional area PIN starts as",
+". Altere-o em Definições antes de usar na instituição.": ". Change it in Settings before using it in the institution.",
+"Altere-o em Definições antes de usar na instituição.": "Change it in Settings before using it in the institution.",
+"Bem-vindo ao Elos": "Welcome to Elos",
+"Corre um exercício isolado, sem gravar nada. Serve para ver como o mesmo jogo muda com a dificuldade.": "Runs a single exercise without saving anything. Useful for seeing how the same game changes with difficulty.",
+"Adapta:": "Adapts:"
+});
+
 /* ---------- moeda e formato de data ----------
    Um residente de Manchester a calcular troco de uma nota de 20 €
    conclui, em quatro segundos, que isto não foi feito para ele.
@@ -4068,10 +4175,37 @@ function frase(limpo){
   return null;
 }
 
+/* Marcadores de português: acentos, cedilha, ou palavras-função
+   que não existem em inglês. Serve de gatilho da rede de segurança. */
+const PARECE_PT = /[ãõçáéíóúâêôà]|\b(não|para|com|dos|das|uma|pelo|pela|são|está|estão|aos|às|quem|onde|quando|isto|isso|seu|sua|este|esta|esse|essa|utente|utentes|voltar|fechar|guardar|começar|escolher|toque|veja)\b/i;
+
+/* Índice de substituição, das expressões mais longas para as mais
+   curtas. Construído uma vez, à primeira necessidade. */
+let SUBST = null;
+function construirSubst(){
+  SUBST = Object.keys(DIC)
+    .filter(k => k.length > 4 && PARECE_PT.test(k))
+    .sort((a, b) => b.length - a.length)
+    .map(k => [k, DIC[k]]);
+}
+
+/* Rede de segurança: nenhuma frase portuguesa deve chegar ao ecrã
+   em modo inglês. Se o dicionário e os padrões falharem, substitui-se
+   o que for reconhecível dentro da frase. */
+function redeSeguranca(txt){
+  if(!SUBST) construirSubst();
+  let out = txt, mudou = false;
+  for(const [k, v] of SUBST){
+    if(out.includes(k)){ out = out.split(k).join(v); mudou = true; }
+  }
+  return mudou ? out : null;
+}
+
 function traduzirTexto(t){
   const limpo = t.trim();
   if(!limpo || limpo.length < 2) return null;
   let r = frase(limpo);
+  if(r === null && LANG === 'en' && PARECE_PT.test(limpo)) r = redeSeguranca(limpo);
   if(r === null){
     /* sem tradução, mas pode ter moeda ou data a converter */
     if(LANG === 'en' && TEM_LOCAL.test(limpo)) r = limpo;
@@ -4080,6 +4214,26 @@ function traduzirTexto(t){
   r = localizar(r);
   if(r === limpo) return null;
   return t.replace(limpo, r);
+}
+
+/* Diagnóstico: lista o que ficou por traduzir no ecrã atual.
+   Correr elosVerificar() na consola do navegador. */
+function elosVerificar(){
+  const faltas = [];
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  while(w.nextNode()){
+    const n = w.currentNode;
+    if(n.parentElement && /SCRIPT|STYLE/.test(n.parentElement.tagName)) continue;
+    const t = n.nodeValue.trim();
+    if(t.length > 4 && PARECE_PT.test(t)
+       && t !== 'Ver em português'
+       && t !== S.instituicao
+       && !S.utentes.some(u => u.nome === t || u.iniciais === t)) faltas.push(t);
+  }
+  const u = [...new Set(faltas)];
+  console.log(u.length ? '⚠ ' + u.length + ' por traduzir:' : '✓ tudo traduzido');
+  u.forEach(x => console.log('  ', x));
+  return u;
 }
 
 /* Traduz uma frase falada. Tenta a frase inteira; se falhar,
@@ -4445,6 +4599,11 @@ function gerarDemo(){
     setTimeout(() => { limparPrefs(); irPara(proDesbloqueado ? 'pro' : 'entrada'); }, 30);
   });
 
+  /* O idioma arranca aqui, antes de qualquer modal poder bloquear
+     o fluxo. Estava depois, e quem escolhesse a demonstração nunca
+     chegava a ligar a tradução. */
+  if(typeof arrancarIdioma === 'function') arrancarIdioma();
+
   /* primeira utilização: propor a demonstração */
   if(!S.utentes.length && !S.sessoes.length){
     const r = await abrirModal('Bem-vindo ao Elos', `
@@ -4455,11 +4614,15 @@ function gerarDemo(){
       </ul>
       <div class="nota-clinica">O PIN da área profissional começa em <b>1234</b>. Altere-o em Definições antes de usar na instituição.</div>`,
       [{ r:'zero', t:'Começar do zero', c:'btn-secundario' }, { r:'demo', t:'Ver a demonstração', c:'btn-primario' }]);
-    if(r && r.r === 'demo'){ gerarDemo(); await gravar(); proDesbloqueado = true; return irPara('pro'); }
+    if(r && r.r === 'demo'){
+      gerarDemo(); await gravar(); proDesbloqueado = true;
+      irPara('pro');
+      if(typeof arrancarIdioma === 'function') arrancarIdioma();
+      return;
+    }
   }
 
   irPara('entrada');
-  arrancarIdioma();
 })();
 </script>
 <script>

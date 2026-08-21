@@ -587,7 +587,7 @@ table.tab tbody tr:hover{background:var(--porcelana)}
     </button>
     <div class="rail-fundo">
       <span id="rail-instituicao"></span><br>
-      Elos v1.1 · dados locais
+      Elos v1.8 · dados locais
     </div>
   </nav>
   <main class="tela" id="pro-tela" tabindex="-1"></main>
@@ -2711,7 +2711,23 @@ const Pro = {
     $('#ses-passos').innerHTML = '';
     $('#ses-sair').textContent = 'Voltar';
     const P = criarPalco($('#ses-palco'), { semTempo:false });
-    try{ await j.item(d, P, {}); }catch(e){}
+    const memoria = {};
+    /* Repetir sem sair: quem está a avaliar quer ver vários itens
+       seguidos, não um e voltar ao menu. */
+    while(true){
+      try{ await j.item(d, P, memoria); }
+      catch(e){ break; }
+      const area = P.montar('Outro exercício?',
+        `${esc(j.nome)} · dificuldade ${d}`,
+        `<div class="opcoes" style="grid-template-columns:repeat(2,1fr);max-width:620px">
+          <button class="gbtn gbtn-principal" data-outro>Mais um</button>
+          <button class="gbtn" data-sair>Voltar aos exercícios</button>
+        </div>`);
+      let b;
+      try{ b = await esperarClique(area, '[data-outro],[data-sair]'); }
+      catch(e){ break; }
+      if(b.hasAttribute('data-sair')) break;
+    }
     irPara('pro'); this.ir('exercicios');
   },
 
@@ -3370,7 +3386,7 @@ const DIC = {
 'Metodologia':'Methodology','Definições':'Settings',
 'Sessão individual':'Individual session','Sair':'Log out',
 'Iniciar sessão':'Start session','Iniciar agora':'Start now',
-'Elos v1.1 · dados locais':'Elos v1.1 · local data',
+'Elos v1.8 · dados locais':'Elos v1.1 · local data',
 'Instituição por definir':'Institution not set',
 
 /* — painel — */
@@ -4107,6 +4123,14 @@ Object.assign(DIC, {
 "Bem-vindo ao Elos": "Welcome to Elos",
 "Corre um exercício isolado, sem gravar nada. Serve para ver como o mesmo jogo muda com a dificuldade.": "Runs a single exercise without saving anything. Useful for seeing how the same game changes with difficulty.",
 "Adapta:": "Adapts:"
+});
+
+
+Object.assign(DIC, {
+"Outro exercício?": "Another one?",
+"Mais um": "One more",
+"Voltar aos exercícios": "Back to exercises",
+"dificuldade": "difficulty"
 });
 
 /* ---------- moeda e formato de data ----------

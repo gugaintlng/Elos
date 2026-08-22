@@ -3719,14 +3719,17 @@ const PADROES = [
   [/^Quanto pagou\?$/, () => 'How much did you pay?'],
   [/^Levou (\d+) (\S+)s a (.+) cada e pagou com (\d+) €\.$/, (m,a,b,c,d) => `You took ${a} ${itn(b)} at ${c} each and paid with €${d}.`],
   /* retorno */
-  [/^✓ (.+)$/, (m,a) => `✓ ${DIC[a] || a}`],
-  [/^→ (.+)$/, (m,a) => `→ ${DIC[a] || a}`],
+  /* O retorno ao utente vem prefixado. Reentra no tradutor completo
+     — só o dicionário não chegava, e deixava passar frases inteiras. */
+  [/^✓ (.+)$/, (m,a) => `✓ ${frase(a) ?? a}`],
+  [/^→ (.+)$/, (m,a) => `→ ${frase(a) ?? a}`],
   [/^Acertou (\d+) de (\d+)(.*)\.$/, (m,a,b,c) => `You got ${a} of ${b}${c}.`],
   [/^Encontrou (\d+) de (\d+)(.*)\.$/, (m,a,b,c) => `You found ${a} of ${b}${c}.`],
   [/^Hoje é (.+)\.$/, (m,a) => `Today is ${a}.`],
   [/^A resposta era (.+)\.$/, (m,a) => `The answer was ${a}.`],
   [/^A sequência era de (\d+) cores\. Vamos tentar outra\.$/, (m,a) => `The sequence had ${a} colours. Let\u2019s try another.`],
   [/^A resposta certa é: (.+)$/, (m,a) => `The correct answer is: ${a}`],
+  [/^(.+) · dificuldade (\d+)$/, (m,a,b) => `${frase(a) ?? a} · difficulty ${b}`],
   [/^(\d+) exercícios$/, (m,a) => `${a} exercises`],
   [/^(\d+) exercícios? registados?$/, (m,a) => `${a} exercises recorded`],
   [/^(\d+) utentes · (\d+) sessões$/, (m,a,b) => `${a} residents · ${b} sessions`],

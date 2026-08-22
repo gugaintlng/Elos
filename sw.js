@@ -7,7 +7,7 @@
    um utente, uma falha de wi-fi não pode interromper nada.
    ============================================================= */
 
-const VERSAO = 'elos-v1.8.0';
+const VERSAO = 'elos-v1.9.0';
 
 const ESSENCIAIS = [
   './',
